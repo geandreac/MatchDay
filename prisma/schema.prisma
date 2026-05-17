@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ──────────── AUTH (NextAuth.js) ────────────
+
+model Account {
+  id                String @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ──────────── USUÁRIOS ────────────
+
+enum Role {
+  CLIENT
+  FIELD_OWNER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  cpf           String    @unique
+  email         String    @unique
+  password      String
+  birthDate     DateTime
+  phone         String?
+  role          Role      @default(CLIENT)
+  image         String?
+
+  accounts      Account[]
+  sessions      Session[]
+
+  ownedFields   Field[]       @relation("FieldOwner")
+  bookings      Booking[]
+  payments      Payment[]
+  participants  Participant[]
+  favorites     Favorite[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ──────────── CAMPOS ────────────
+
+model Field {
+  id            String    @id @default(cuid())
+  ownerId       String
+  owner         User      @relation("FieldOwner", fields: [ownerId], references: [id])
+
+  name          String
+  address       String
+  city          String
+  state         String?
+  latitude      Float?
+  longitude     Float?
+  photos        String  @default("[]")
+  description   String?
+  capacity      Int       @default(10)
+  pricePerHour  Float
+  startHour     Int       // 17 = 17:00
+  endHour       Int       // 3 = 03:00
+  active        Boolean   @default(true)
+
+  bookings      Booking[]
+  favorites     Favorite[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ──────────── RESERVAS ────────────
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  REFUNDED
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  fieldId         String
+  field           Field         @relation(fields: [fieldId], references: [id])
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+
+  date            DateTime
+  startHour       Int
+  endHour         Int
+  totalValue      Float
+  paidValue       Float         @default(0)
+  status          BookingStatus @default(PENDING)
+  shareLink       String        @unique
+  shareLinkId     String        @unique
+  paymentDeadline DateTime
+
+  participants    Participant[]
+  payments        Payment[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// ──────────── PARTICIPANTES ────────────
+
+model Participant {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+
+  shareValue Float
+  hasPaid    Boolean  @default(false)
+
+  @@unique([bookingId, userId])
+}
+
+// ──────────── PAGAMENTOS ────────────
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  bookingId String
+  booking   Booking       @relation(fields: [bookingId], references: [id])
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+
+  amount     Float
+  method     PaymentMethod @default(PIX)
+  status     PaymentStatus @default(PENDING)
+  pixCode    String?
+  pixQrCode  String?
+  refunded   Boolean       @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ──────────── FAVORITOS ────────────
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  fieldId   String
+  field     Field    @relation(fields: [fieldId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, fieldId])
+}
