@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface FieldResult {
   id: string; name: string; city: string; address: string;
@@ -100,7 +101,7 @@ export default function SearchPage() {
       ) : fields.length > 0 ? (
         <div className="space-y-3 stagger">
           {fields.map((field, i) => (
-            <div key={field.id} className="card p-4 animate-fade-in-up" style={{ animationDelay: `${i * 0.06}s` }}>
+            <Link key={field.id} href={`/campo/${field.id}`} className="card p-4 animate-fade-in-up block hover:border-primary/40 transition-all" style={{ animationDelay: `${i * 0.06}s` }}>
               <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/10">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -117,7 +118,7 @@ export default function SearchPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       ) : search || activeFilter ? (

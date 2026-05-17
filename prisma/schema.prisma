@@ -71,9 +71,28 @@ model User {
   payments      Payment[]
   participants  Participant[]
   favorites     Favorite[]
+  contributions PaymentContribution[]
+  ratings       Rating[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// ──────────── AVALIAÇÕES ────────────
+
+model Rating {
+  id        String   @id @default(cuid())
+  fieldId   String
+  field     Field    @relation(fields: [fieldId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  score     Int      // 1-5
+  comment   String?
+  bookingId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, bookingId])
 }
 
 // ──────────── CAMPOS ────────────
@@ -89,16 +108,18 @@ model Field {
   state         String?
   latitude      Float?
   longitude     Float?
-  photos        String  @default("[]")
+  photos        String    @default("[]")
   description   String?
   capacity      Int       @default(10)
   pricePerHour  Float
-  startHour     Int       // 17 = 17:00
-  endHour       Int       // 3 = 03:00
+  startHour     Int
+  endHour       Int
   active        Boolean   @default(true)
+  availableDays String    @default("[1,2,3,4,5,6]")
 
   bookings      Booking[]
   favorites     Favorite[]
+  ratings       Rating[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -124,15 +145,19 @@ model Booking {
   date            DateTime
   startHour       Int
   endHour         Int
+  hours           Int           @default(1)
   totalValue      Float
+  platformFee     Float         @default(0)
   paidValue       Float         @default(0)
   status          BookingStatus @default(PENDING)
   shareLink       String        @unique
   shareLinkId     String        @unique
   paymentDeadline DateTime
+  paidAt          DateTime?
 
   participants    Participant[]
   payments        Payment[]
+  contributions   PaymentContribution[]
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -180,9 +205,29 @@ model Payment {
   pixCode    String?
   pixQrCode  String?
   refunded   Boolean       @default(false)
+  paidAt     DateTime?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+// ──────────── LISTA DE PAGAMENTO COMPARTILHADO ────────────
+
+model PaymentContribution {
+  id          String        @id @default(cuid())
+  bookingId   String
+  booking     Booking       @relation(fields: [bookingId], references: [id])
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  amount      Float
+  paid        Boolean       @default(false)
+  paidAt      DateTime?
+
+  pixCode     String?
+  pixQrCode   String?
+  paymentId   String?       // ID do pagamento no gateway
+
+  createdAt   DateTime      @default(now())
 }
 
 // ──────────── FAVORITOS ────────────
