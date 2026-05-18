@@ -18,8 +18,11 @@ export async function POST(request: Request) {
   const startDate = new Date(date + "T12:00:00");
   startDate.setHours(startHour, 0, 0, 0);
 
-  const paymentDeadline = new Date(startDate);
-  paymentDeadline.setHours(paymentDeadline.getHours() - 48);
+  const paymentDeadline48h = new Date(startDate);
+  paymentDeadline48h.setHours(paymentDeadline48h.getHours() - 48);
+
+  const minDeadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  const paymentDeadline = paymentDeadline48h > minDeadline ? paymentDeadline48h : minDeadline;
 
   const shareLinkId = nanoid(12);
 
