@@ -27,8 +27,9 @@ export default function ReservarPage() {
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [payValue, setPayValue] = useState("");
-  const [showPix, setShowPix] = useState<string | null>(null);
+  const [showPix, setShowPix] = useState(false);
   const [currentPix, setCurrentPix] = useState<{ qrCode: string; qrCodeBase64: string | null } | null>(null);
+  const [lastContributionId, setLastContributionId] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [msg, setMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
@@ -57,7 +58,8 @@ export default function ReservarPage() {
 
     if (res.ok && data.pix) {
       setCurrentPix({ qrCode: data.pix.qrCode, qrCodeBase64: data.pix.qrCodeBase64 });
-      setShowPix(data.pix.qrCode);
+      setShowPix(true);
+      setLastContributionId(data.contribution.id);
       setMsg({ text: "PIX gerado! Escaneie o QR Code para pagar.", type: "success" });
       load();
     } else {
@@ -163,6 +165,23 @@ export default function ReservarPage() {
                   Copiar código PIX
                 </button>
               </div>
+            )}
+
+            {showPix && lastContributionId && (
+              <button onClick={async () => {
+                setMsg(null); setPaying(true);
+                const res = await fetch("/api/pix/verificar", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ contributionId: lastContributionId }),
+                });
+                const data = await res.json();
+                setMsg({ text: data.message, type: data.paid ? "success" : "error" });
+                if (data.paid) { setShowPix(false); load(); }
+                setPaying(false);
+              }} disabled={paying} className="btn-secondary w-full text-sm">
+                {paying ? "Verificando..." : "Já paguei - Verificar"}
+              </button>
             )}
           </div>
         )}
