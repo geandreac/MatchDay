@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { reembolsarPagamento } from "@/lib/mercadopago";
 
 export async function POST(request: Request) {
   try {
@@ -44,8 +45,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Já há pagamentos nesta reserva. Peça ao dono do campo para cancelar." }, { status: 400 });
     }
 
-    // Se o dono está cancelando, reembolsa todos os pagamentos
+    // Se o dono está cancelando, reembolsa todos os pagamentos via Mercado Pago
     if (isOwner && hasPaid) {
+      const paidContributions = booking.contributions.filter((c) => c.paid && c.paymentId);
+      for (const c of paidContributions) {
+        await reembolsarPagamento(Number(c.paymentId));
+      }
+
       await prisma.$transaction(
         booking.contributions.map((c) =>
           prisma.paymentContribution.update({

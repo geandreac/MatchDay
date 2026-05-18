@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, Payment } from "mercadopago";
+import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago";
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN!,
@@ -45,4 +45,15 @@ export async function buscarPagamento(paymentId: number) {
     externalReference: result.external_reference,
     paidAt: result.date_approved,
   };
+}
+
+export async function reembolsarPagamento(paymentId: number) {
+  try {
+    const refund = new PaymentRefund(client);
+    await refund.create({ payment_id: paymentId });
+    return { refunded: true };
+  } catch (error: any) {
+    console.error(`Refund error for payment ${paymentId}:`, error);
+    return { refunded: false, error: error.message };
+  }
 }
