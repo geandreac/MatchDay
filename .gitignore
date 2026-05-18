@@ -49,3 +49,5 @@ scripts/generate-icons.cjs
 next-env.d.ts
 
 /src/generated/prisma
+
+.vercel
