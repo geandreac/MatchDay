@@ -11,6 +11,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ shar
       field: { select: { name: true, address: true, city: true, pricePerHour: true } },
       participants: { include: { user: { select: { id: true, name: true, image: true } } } },
       user: { select: { name: true } },
+      contributions: {
+        include: { user: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -25,6 +29,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ shar
       field: { select: { name: true, address: true, city: true, pricePerHour: true } },
       participants: { include: { user: { select: { id: true, name: true, image: true } } } },
       user: { select: { name: true } },
+      contributions: {
+        include: { user: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "desc" },
+      },
     },
   }))!;
 
