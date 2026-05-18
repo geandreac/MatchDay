@@ -15,6 +15,18 @@ interface CampoData {
   owner: { name: string };
 }
 
+function fmtDate(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function fmtDateBR(dateStr: string) {
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
+}
+
 function generateDates(availableDays: number[], weeks = 4) {
   const dates: Date[] = [];
   const today = new Date();
@@ -30,9 +42,11 @@ function generateDates(availableDays: number[], weeks = 4) {
 
 function generateTimeSlots(startH: number, endH: number, activeBookings: any[], dateStr: string) {
   const slots: { hour: number; available: boolean }[] = [];
-  const dayBookings = activeBookings.filter(
-    (b) => new Date(b.date).toDateString() === new Date(dateStr).toDateString()
-  );
+  const dayBookings = activeBookings.filter((b) => {
+    const bDate = new Date(b.date);
+    const bFmt = fmtDate(bDate);
+    return bFmt === dateStr;
+  });
 
   let h = startH;
   const end = endH <= startH ? endH + 24 : endH;
@@ -173,7 +187,7 @@ export default function CampoDetalhes() {
           <h3 className="text-sm font-semibold text-text-2 tracking-wide uppercase mb-3">Datas Disponíveis</h3>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
             {dates.map((date) => {
-              const ds = date.toISOString().split("T")[0];
+              const ds = fmtDate(date);
               const active = selectedDate === ds;
               const dayName = date.toLocaleDateString("pt-BR", { weekday: "short" }).slice(0, 3);
               const dayNum = date.getDate();
@@ -194,7 +208,7 @@ export default function CampoDetalhes() {
         {selectedDate && (
           <div>
             <h3 className="text-sm font-semibold text-text-2 tracking-wide uppercase mb-3">
-              Horários — {new Date(selectedDate + "T12:00:00").toLocaleDateString("pt-BR")}
+              Horários — {fmtDateBR(selectedDate)}
             </h3>
             <div className="flex flex-wrap gap-2">
               {slots.map(({ hour, available }) => {
