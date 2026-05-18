@@ -101,7 +101,7 @@ export default function DetalhesCampo() {
           <h2 className="text-lg font-bold text-text">{field.name}</h2>
           <p className="text-sm text-text-3">{field.city}{field.state ? `, ${field.state}` : ""}</p>
         </div>
-        <span className={`ml-auto ${field.active ? "badge-green" : "badge-text-3"}`}>
+        <span className={`ml-auto badge ${field.active ? "badge-green" : "badge-text-3"}`}>
           <span className={`h-1.5 w-1.5 rounded-full ${field.active ? "bg-primary" : "bg-text-3"}`} />
           {field.active ? "Ativo" : "Inativo"}
         </span>
@@ -127,8 +127,8 @@ export default function DetalhesCampo() {
       <button onClick={toggleActive}
         className={`w-full rounded-xl py-3 text-sm font-medium transition-all duration-300 ${
           field.active
-            ? "bg-surface-2 text-text-3 border border-border hover:border-danger/30 hover:text-danger"
-            : "bg-primary text-text glow-green-sm"
+            ? "btn-secondary text-text-3"
+            : "btn-primary"
         }`}>
         {field.active ? "Desativar Campo" : "Ativar Campo"}
       </button>

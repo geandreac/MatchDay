@@ -1,33 +1,59 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { formatarData } from "@/lib/validations";
 
 const tabPaths = ["/home", "/search", "/bookings", "/menu"];
 
+const backRoutes: Record<string, string> = {
+  "/campo": "/search",
+  "/owner/dashboard": "/menu",
+  "/owner/cadastro": "/owner/dashboard",
+  "/owner/campos": "/owner/dashboard",
+  "/menu/dados": "/menu",
+  "/menu/favoritos": "/menu",
+  "/menu/avaliacoes": "/menu",
+  "/menu/cartoes": "/menu",
+  "/menu/seguranca": "/menu",
+  "/menu/historico": "/menu",
+  "/menu/preferencias": "/menu",
+  "/reservar": "/bookings",
+  "/termos": "/menu",
+  "/privacidade": "/menu",
+  "/admin": "/menu",
+};
+
+function getBackRoute(pathname: string): string {
+  for (const [prefix, route] of Object.entries(backRoutes)) {
+    if (pathname.startsWith(prefix)) return route;
+  }
+  return "/menu";
+}
+
 export function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const router = useRouter();
   const hoje = formatarData(new Date());
 
   const isSubpage = !tabPaths.includes(pathname) && pathname !== "/";
+  const backHref = getBackRoute(pathname);
 
   return (
     <header className="sticky top-0 z-40 glass border-b border-border/50">
       <div className="mx-auto flex max-w-lg items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3">
           {isSubpage && (
-            <button
-              onClick={() => router.back()}
+            <Link
+              href={backHref}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 hover:text-primary transition-all duration-200 text-text-2"
               aria-label="Voltar"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
-            </button>
+            </Link>
           )}
           <div>
             <p className="text-xs font-medium tracking-wider uppercase text-text-3">{hoje}</p>
