@@ -129,17 +129,25 @@ export default function ReservarPage() {
         </div>
 
         {/* PIX Payment */}
-        {booking.status === "PENDING" && (
+        {remaining() > 0 && (
           <div className="card p-5 space-y-4">
             <h3 className="text-sm font-semibold text-text-2 uppercase tracking-wide">Fazer Pagamento</h3>
-            <div>
-              <label className="text-xs text-text-3 mb-1 block">Valor (R$ 0,01 a R$ {remaining().toFixed(2)})</label>
-              <input type="number" step="0.01" min="0.01" max={remaining()} value={payValue} onChange={(e) => setPayValue(e.target.value)}
-                className="input-base" placeholder="Quanto deseja pagar?" />
-            </div>
-            <button onClick={handlePay} disabled={paying || !payValue} className="btn-primary w-full">
-              {paying ? "Gerando PIX..." : `Pagar R$ ${parseFloat(payValue || "0").toFixed(2)}`}
-            </button>
+            {session ? (
+              <>
+                <div>
+                  <label className="text-xs text-text-3 mb-1 block">Valor (R$ 0,01 a R$ {remaining().toFixed(2)})</label>
+                  <input type="number" step="0.01" min="0.01" max={remaining()} value={payValue} onChange={(e) => setPayValue(e.target.value)}
+                    className="input-base" placeholder="Quanto deseja pagar?" />
+                </div>
+                <button onClick={handlePay} disabled={paying || !payValue} className="btn-primary w-full">
+                  {paying ? "Gerando PIX..." : `Pagar R$ ${parseFloat(payValue || "0").toFixed(2)}`}
+                </button>
+              </>
+            ) : (
+              <button onClick={() => signIn()} className="btn-primary w-full">
+                Fazer login para pagar
+              </button>
+            )}
 
             {showPix && currentPix && (
               <div className="text-center space-y-3 pt-2 animate-fade-in-up">
