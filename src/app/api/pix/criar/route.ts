@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Faça login para pagar." }, { status: 401 });
   }
 
-  const { bookingId, amount } = await request.json();
+  const { bookingId, amount, useCredits } = await request.json();
   const userId = session.user.id as string;
 
   if (!bookingId || !amount || amount < 0.01) {
@@ -27,6 +27,46 @@ export async function POST(request: Request) {
   const remaining = Number(booking.totalValue) - Number(booking.paidValue);
   if (amount > remaining) {
     return NextResponse.json({ error: "Valor excede o restante." }, { status: 400 });
+  }
+
+  // Se usar créditos
+  if (useCredits) {
+    const availableCredits = await prisma.credit.findMany({
+      where: { userId, used: false },
+    });
+    const totalCredits = availableCredits.reduce((s, c) => s + c.amount, 0);
+
+    if (totalCredits < amount) {
+      return NextResponse.json({ error: "Saldo de créditos insuficiente." }, { status: 400 });
+    }
+
+    let remainingAmount = amount;
+    for (const credit of availableCredits) {
+      if (remainingAmount <= 0) break;
+      const useAmount = Math.min(credit.amount, remainingAmount);
+      remainingAmount -= useAmount;
+
+      await prisma.credit.update({
+        where: { id: credit.id },
+        data: { used: true },
+      });
+    }
+
+    // Marca como pago via crédito
+    await prisma.paymentContribution.create({
+      data: { bookingId, userId, amount, paid: true, paidAt: new Date() },
+    });
+
+    const newPaidValue = Number(booking.paidValue) + amount;
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        paidValue: newPaidValue,
+        status: newPaidValue >= Number(booking.totalValue) ? "CONFIRMED" : "PENDING",
+      },
+    });
+
+    return NextResponse.json({ paid: true, method: "credits" }, { status: 200 });
   }
 
   const externalRef = `${booking.shareLinkId}-${userId}-${Date.now()}`;

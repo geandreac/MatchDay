@@ -45,21 +45,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Já há pagamentos nesta reserva. Peça ao dono do campo para cancelar." }, { status: 400 });
     }
 
-    // Se o dono está cancelando, reembolsa todos os pagamentos via Mercado Pago
+    // Se o dono está cancelando: crédito imediato + reembolso MP em background
     if (isOwner && hasPaid) {
-      const paidContributions = booking.contributions.filter((c) => c.paid && c.paymentId);
+      const paidContributions = booking.contributions.filter((c) => c.paid);
+
+      // Cria créditos instantâneos para cada jogador
       for (const c of paidContributions) {
-        await reembolsarPagamento(Number(c.paymentId));
+        await prisma.credit.create({
+          data: {
+            userId: c.userId,
+            bookingId: booking.id,
+            amount: c.amount,
+            expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+          },
+        });
       }
 
-      await prisma.$transaction(
-        booking.contributions.map((c) =>
-          prisma.paymentContribution.update({
-            where: { id: c.id },
-            data: { paid: false, paidAt: null },
-          })
-        )
-      );
+      // Reembolso Mercado Pago em background (não bloqueia)
+      for (const c of paidContributions) {
+        if (c.paymentId) {
+          reembolsarPagamento(Number(c.paymentId)).catch(() => {});
+        }
+      }
+
+      await prisma.paymentContribution.updateMany({
+        where: { bookingId: booking.id },
+        data: { paid: false },
+      });
     }
 
     await prisma.booking.update({

@@ -31,9 +31,12 @@ export default function ReservarPage() {
   const [currentPix, setCurrentPix] = useState<{ qrCode: string; qrCodeBase64: string | null } | null>(null);
   const [lastContributionId, setLastContributionId] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [msg, setMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [useCredits, setUseCredits] = useState(false);
 
   useEffect(() => { load(); }, [params]);
 
@@ -41,6 +44,10 @@ export default function ReservarPage() {
     const id = (await params).shareLinkId;
     const res = await fetch(`/api/reservar/${id}`);
     if (res.ok) setBooking(await res.json());
+
+    const cr = await fetch("/api/credits");
+    if (cr.ok) { const d = await cr.json(); setCreditBalance(d.total); }
+
     setLoading(false);
   }
 
@@ -54,7 +61,7 @@ export default function ReservarPage() {
     const res = await fetch("/api/pix/criar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId: booking.id, amount }),
+      body: JSON.stringify({ bookingId: booking.id, amount, useCredits }),
     });
     const data = await res.json();
 
@@ -63,6 +70,10 @@ export default function ReservarPage() {
       setShowPix(true);
       setLastContributionId(data.contribution.id);
       setMsg({ text: "PIX gerado! Escaneie o QR Code para pagar.", type: "success" });
+      load();
+    } else if (res.ok && data.paid) {
+      setMsg({ text: "Pagamento confirmado com créditos!", type: "success" });
+      setCreditBalance((prev) => prev - amount);
       load();
     } else {
       setMsg({ text: data.error || "Erro ao gerar PIX.", type: "error" });
@@ -150,6 +161,26 @@ export default function ReservarPage() {
         {remaining() > 0 && (
           <div className="card p-5 space-y-4">
             <h3 className="text-sm font-semibold text-text-2 uppercase tracking-wide">Fazer Pagamento</h3>
+
+            {/* Créditos disponíveis */}
+            {creditBalance > 0 && (
+              <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  <span className="text-text-2">Créditos disponíveis</span>
+                </div>
+                <span className="font-semibold text-primary">R$ {creditBalance.toFixed(2)}</span>
+              </div>
+            )}
+
+            {creditBalance > 0 && remaining() > 0 && (
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked={useCredits} onChange={(e) => setUseCredits(e.target.checked)}
+                  className="h-4 w-4 rounded border-border bg-surface-2 text-primary focus:ring-primary" />
+                <span className="text-sm text-text-2">Usar créditos para pagar</span>
+              </label>
+            )}
+
             {session ? (
               <>
                 <div>
@@ -158,7 +189,7 @@ export default function ReservarPage() {
                     className="input-base" placeholder="Quanto deseja pagar?" />
                 </div>
                 <button onClick={handlePay} disabled={paying || !payValue} className="btn-primary w-full">
-                  {paying ? "Gerando PIX..." : `Pagar R$ ${parseFloat(payValue || "0").toFixed(2)}`}
+                  {paying ? "Processando..." : useCredits ? "Pagar com Créditos" : `Pagar R$ ${parseFloat(payValue || "0").toFixed(2)}`}
                 </button>
               </>
             ) : (

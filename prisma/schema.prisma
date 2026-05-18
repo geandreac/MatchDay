@@ -72,10 +72,25 @@ model User {
   participants  Participant[]
   favorites     Favorite[]
   contributions PaymentContribution[]
+  credits       Credit[]
   ratings       Rating[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// ──────────── CRÉDITOS ────────────
+
+model Credit {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  bookingId   String
+  amount      Float
+  used        Boolean  @default(false)
+  expiresAt   DateTime?
+
+  createdAt   DateTime @default(now())
 }
 
 // ──────────── AVALIAÇÕES ────────────
