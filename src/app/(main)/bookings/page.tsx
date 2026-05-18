@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface BookingItem {
-  id: string; date: string; startHour: number; endHour: number;
+  id: string; shareLinkId: string; date: string; startHour: number; endHour: number;
   totalValue: number; paidValue: number; status: string;
   field: { name: string; city: string };
   participants: { user: { name: string } }[];
@@ -50,19 +51,25 @@ export default function BookingsPage() {
             <div className="space-y-3">
               <p className="text-xs font-medium text-text-3">PRÓXIMOS</p>
               {activeBookings.map((b) => (
-                <div key={b.id} className="card p-4">
+                <Link key={b.id} href={`/reservar/${b.shareLinkId}`} className="card p-4 block hover:border-primary/40 transition-all">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-semibold text-text">{b.field.name}</p>
-                      <p className="text-xs text-text-3 mt-1">{new Date(b.date).toLocaleDateString("pt-BR")} • {String(b.startHour).padStart(2, "0")}h às {String(b.endHour).padStart(2, "0")}h</p>
+                      <p className="text-xs text-text-3 mt-1">{new Date(b.date).toLocaleDateString("pt-BR")} • {String(b.startHour).padStart(2, "0")}h</p>
                       <p className="text-xs text-text-3">{b.participants.length} participante{b.participants.length !== 1 ? "s" : ""}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right space-y-1">
                       <span className={statusConfig[b.status]?.badge ?? ""}>{statusConfig[b.status]?.label ?? b.status}</span>
-                      <p className="text-xs text-text-3 mt-1">R$ {Number(b.totalValue).toFixed(2)}</p>
+                      <p className="text-xs text-text-3">R$ {Number(b.totalValue).toFixed(2)}</p>
                     </div>
                   </div>
-                </div>
+                  {b.status === "PENDING" && (
+                    <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+                      <span className="text-xs text-text-3">R$ {Number(b.paidValue).toFixed(2)} de R$ {Number(b.totalValue).toFixed(2)}</span>
+                      <span className="text-xs font-medium text-primary">Pagar →</span>
+                    </div>
+                  )}
+                </Link>
               ))}
             </div>
           )}
