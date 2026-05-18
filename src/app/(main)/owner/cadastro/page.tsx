@@ -7,14 +7,40 @@ import Link from "next/link";
 export default function CadastroCampo() {
   const router = useRouter();
   const [form, setForm] = useState({
-    name: "", address: "", city: "", state: "", description: "",
+    cep: "", name: "", address: "", city: "", state: "", description: "",
     capacity: "10", pricePerHour: "", startHour: "17", endHour: "23",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [buscandoCep, setBuscandoCep] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    let formatted = value;
+    if (name === "cep") {
+      formatted = value.replace(/\D/g, "").slice(0, 8);
+      if (formatted.length > 5) formatted = `${formatted.slice(0, 5)}-${formatted.slice(5)}`;
+    }
+    setForm((prev) => ({ ...prev, [name]: formatted }));
+  }
+
+  async function buscarCep() {
+    const cep = form.cep.replace(/\D/g, "");
+    if (cep.length !== 8) return;
+    setBuscandoCep(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        setForm((prev) => ({
+          ...prev,
+          address: data.logradouro ? `${data.logradouro}, ${prev.address.split(",")[1]?.trim() ?? ""}`.trim().replace(/,$/, "") : prev.address,
+          city: data.localidade || prev.city,
+          state: data.uf || prev.state,
+        }));
+      }
+    } catch {}
+    setBuscandoCep(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -28,7 +54,7 @@ export default function CadastroCampo() {
       const res = await fetch("/api/fields", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, cep: form.cep.replace(/\D/g, "") }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Erro ao cadastrar campo."); setLoading(false); return; }
@@ -38,16 +64,13 @@ export default function CadastroCampo() {
 
   return (
     <div className="space-y-6 stagger">
-      {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/owner" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-          </svg>
+        <Link href="/owner" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors text-text-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
         </Link>
         <div>
           <h2 className="text-lg font-bold text-text">Cadastrar Campo</h2>
-          <p className="text-sm text-text-3">Preencha os dados do seu campo</p>
+          <p className="text-sm text-text-3">Informe os dados do seu campo</p>
         </div>
       </div>
 
@@ -62,55 +85,68 @@ export default function CadastroCampo() {
         )}
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-text-2" htmlFor="name">Nome do Campo *</label>
-          <input id="name" name="name" value={form.name} onChange={handleChange} className="input-base" placeholder="Ex: Arena Show de Bola" required />
+          <label className="text-sm font-medium text-text-2">Nome do Campo *</label>
+          <input name="name" value={form.name} onChange={handleChange} className="input-base" placeholder="Ex: Arena Show de Bola" required />
         </div>
 
+        {/* CEP */}
         <div className="space-y-1">
-          <label className="text-sm font-medium text-text-2" htmlFor="address">Endereço *</label>
-          <input id="address" name="address" value={form.address} onChange={handleChange} className="input-base" placeholder="Rua, número, bairro" required />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-text-2" htmlFor="city">Cidade *</label>
-            <input id="city" name="city" value={form.city} onChange={handleChange} className="input-base" required />
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-text-2" htmlFor="state">Estado</label>
-            <input id="state" name="state" value={form.state} onChange={handleChange} className="input-base" placeholder="SP" maxLength={2} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-text-2" htmlFor="pricePerHour">Preço por Hora (R$) *</label>
-            <input id="pricePerHour" name="pricePerHour" type="number" step="0.01" min="0" value={form.pricePerHour} onChange={handleChange} className="input-base" placeholder="150" required />
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-text-2" htmlFor="capacity">Capacidade</label>
-            <input id="capacity" name="capacity" type="number" min="1" value={form.capacity} onChange={handleChange} className="input-base" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-text-2" htmlFor="startHour">Horário Início</label>
-            <select id="startHour" name="startHour" value={form.startHour} onChange={handleChange} className="input-base">
-              {Array.from({ length: 24 }, (_, i) => (<option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-text-2" htmlFor="endHour">Horário Fim</label>
-            <select id="endHour" name="endHour" value={form.endHour} onChange={handleChange} className="input-base">
-              {Array.from({ length: 24 }, (_, i) => (<option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>))}
-            </select>
+          <label className="text-sm font-medium text-text-2">CEP</label>
+          <div className="flex gap-2">
+            <input name="cep" value={form.cep} onChange={handleChange} onBlur={buscarCep}
+              className="input-base flex-1" placeholder="00000-000" maxLength={9} />
+            <button type="button" onClick={buscarCep} disabled={buscandoCep || form.cep.replace(/\D/g, "").length !== 8}
+              className="btn-secondary text-sm px-3 whitespace-nowrap">
+              {buscandoCep ? "..." : "Buscar"}
+            </button>
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-medium text-text-2" htmlFor="description">Descrição</label>
-          <textarea id="description" name="description" value={form.description} onChange={handleChange} rows={3} className="input-base" placeholder="Gramado, iluminação, estacionamento..." />
+          <label className="text-sm font-medium text-text-2">Endereço *</label>
+          <input name="address" value={form.address} onChange={handleChange} className="input-base" placeholder="Rua, número, bairro" required />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-text-2">Cidade *</label>
+            <input name="city" value={form.city} onChange={handleChange} className="input-base" required />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-text-2">Estado</label>
+            <input name="state" value={form.state} onChange={handleChange} className="input-base" placeholder="SP" maxLength={2} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-text-2">Preço por Hora (R$) *</label>
+            <input name="pricePerHour" type="number" step="0.01" min="0" value={form.pricePerHour} onChange={handleChange} className="input-base" placeholder="150" required />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-text-2">Capacidade</label>
+            <input name="capacity" type="number" min="1" value={form.capacity} onChange={handleChange} className="input-base" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-text-2">Horário Início</label>
+            <select name="startHour" value={form.startHour} onChange={handleChange} className="input-base">
+              {Array.from({ length: 24 }, (_, i) => (<option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-text-2">Horário Fim</label>
+            <select name="endHour" value={form.endHour} onChange={handleChange} className="input-base">
+              {Array.from({ length: 24 }, (_, i) => (<option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>))}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-text-2">Descrição</label>
+          <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="input-base" placeholder="Gramado, iluminação, estacionamento..." />
         </div>
 
         <div className="flex gap-3 pt-2">
@@ -123,4 +159,3 @@ export default function CadastroCampo() {
     </div>
   );
 }
-

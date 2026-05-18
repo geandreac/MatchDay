@@ -104,6 +104,7 @@ model Field {
   owner         User      @relation("FieldOwner", fields: [ownerId], references: [id])
 
   name          String
+  cep           String?
   address       String
   city          String
   state         String?

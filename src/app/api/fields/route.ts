@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
-      name, address, city, state,
+      cep, name, address, city, state,
       latitude, longitude,
       description, capacity, pricePerHour,
       startHour, endHour,
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
     const field = await prisma.field.create({
       data: {
         owner: { connect: { id: session.user.id! } },
+        cep: cep ?? null,
         name,
         address,
         city,
