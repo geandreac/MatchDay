@@ -25,16 +25,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const shareLinkId = nanoid(12);
-  const startDate = new Date(date);
+  const startDate = new Date(date + "T12:00:00");
   startDate.setHours(startHour, 0, 0, 0);
-  const endDate = new Date(date);
-  endDate.setHours(endHour, 0, 0, 0);
 
   const hours = endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
   const totalValue = hours * Number(field.pricePerHour);
+  const platformFee = totalValue * 0.05;
+  const grandTotal = totalValue + platformFee;
 
-  const paymentDeadline = new Date(startDate);
-  paymentDeadline.setDate(paymentDeadline.getDate() - 2);
+  const paymentDeadline48h = new Date(startDate);
+  paymentDeadline48h.setHours(paymentDeadline48h.getHours() - 48);
+  const minDeadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  const paymentDeadline = paymentDeadline48h > minDeadline ? paymentDeadline48h : minDeadline;
 
   const booking = await prisma.booking.create({
     data: {
@@ -43,7 +45,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       date: startDate,
       startHour,
       endHour,
-      totalValue,
+      hours,
+      totalValue: grandTotal,
+      platformFee,
+      paidValue: 0,
       shareLinkId,
       shareLink: `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/reservar/${shareLinkId}`,
       paymentDeadline,
