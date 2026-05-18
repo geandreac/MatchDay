@@ -36,17 +36,29 @@ export async function POST(request: Request) {
     const isParticipant = booking.contributions.some((c) => c.userId === userId) || booking.participants.some((p) => p.userId === userId);
 
     if (!isOwner && !isParticipant) {
-      return NextResponse.json({ error: `Você não pode cancelar esta reserva. (owner=${booking.userId}, user=${userId})` }, { status: 403 });
+      return NextResponse.json({ error: `Você não pode cancelar esta reserva.` }, { status: 403 });
     }
 
     const hasPaid = booking.contributions.some((c) => c.paid);
-    if (hasPaid) {
-      return NextResponse.json({ error: "Já há pagamentos nesta reserva. Entre em contato com o suporte para cancelar." }, { status: 400 });
+    if (!isOwner && hasPaid) {
+      return NextResponse.json({ error: "Já há pagamentos nesta reserva. Peça ao dono do campo para cancelar." }, { status: 400 });
+    }
+
+    // Se o dono está cancelando, reembolsa todos os pagamentos
+    if (isOwner && hasPaid) {
+      await prisma.$transaction(
+        booking.contributions.map((c) =>
+          prisma.paymentContribution.update({
+            where: { id: c.id },
+            data: { paid: false, paidAt: null },
+          })
+        )
+      );
     }
 
     await prisma.booking.update({
       where: { id: bookingId },
-      data: { status: "CANCELLED" },
+      data: { status: "CANCELLED", paidValue: 0 },
     });
 
     return NextResponse.json({ message: "Reserva cancelada com sucesso." });
