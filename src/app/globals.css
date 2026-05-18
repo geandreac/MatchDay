@@ -20,6 +20,17 @@
   --font-mono: var(--font-geist-mono);
 }
 
+.light {
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-light: #cbd5e1;
+  --color-text: #0f172a;
+  --color-text-2: #334155;
+  --color-text-3: #64748b;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #222233 transparent;

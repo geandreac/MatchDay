@@ -89,6 +89,7 @@ model Rating {
   score     Int      // 1-5
   comment   String?
   bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -158,6 +159,7 @@ model Booking {
   participants    Participant[]
   payments        Payment[]
   contributions   PaymentContribution[]
+  ratings         Rating[]
 
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
