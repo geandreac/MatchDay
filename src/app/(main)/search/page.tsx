@@ -20,31 +20,36 @@ export default function SearchPage() {
 
   useEffect(() => {
     if (activeFilter === "nearby") {
+      setPosError(false);
+      setUserPos(null);
       navigator.geolocation.getCurrentPosition(
-        (pos) => setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => setPosError(true),
+        (pos) => {
+          const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserPos(p);
+          fetchFields(search, activeFilter, p);
+        },
+        () => {
+          setPosError(true);
+          fetchFields(search, activeFilter, null);
+        },
         { enableHighAccuracy: true, timeout: 10000 }
       );
+    } else {
+      const timer = setTimeout(() => fetchFields(search, activeFilter, null), 300);
+      return () => clearTimeout(timer);
     }
-  }, [activeFilter]);
+  }, [search, activeFilter]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchFields();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search, activeFilter, userPos]);
-
-  async function fetchFields() {
+  async function fetchFields(query: string, filter: string | null, pos: { lat: number; lng: number } | null) {
     setLoading(true);
     const params = new URLSearchParams();
-    if (search) params.set("q", search);
+    if (query) params.set("q", query);
 
-    if (activeFilter === "city" && search) params.set("city", search);
+    if (filter === "city" && query) params.set("city", query);
 
-    if (activeFilter === "nearby" && userPos) {
-      params.set("lat", String(userPos.lat));
-      params.set("lng", String(userPos.lng));
+    if (filter === "nearby" && pos) {
+      params.set("lat", String(pos.lat));
+      params.set("lng", String(pos.lng));
     }
 
     const res = await fetch(`/api/fields/search?${params}`);

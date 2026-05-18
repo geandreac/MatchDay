@@ -32,6 +32,8 @@ export default function ReservarPage() {
   const [lastContributionId, setLastContributionId] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [msg, setMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => { load(); }, [params]);
 
@@ -72,6 +74,20 @@ export default function ReservarPage() {
 
   function copyLink() {
     if (booking?.shareLink) navigator.clipboard.writeText(booking.shareLink);
+  }
+
+  async function handleCancel() {
+    if (!booking) return;
+    setCancelling(true); setMsg(null);
+    const res = await fetch("/api/reservar/cancelar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: booking.id }),
+    });
+    const data = await res.json();
+    setMsg({ text: data.message || data.error, type: res.ok ? "success" : "error" });
+    if (res.ok) { load(); setShowCancelConfirm(false); }
+    setCancelling(false);
   }
 
   if (loading) return (
@@ -234,7 +250,44 @@ export default function ReservarPage() {
             </p>
           </div>
         )}
+
+        {/* Back & Cancel */}
+        <div className="flex gap-3 pt-2">
+          <button onClick={() => window.history.back()} className="btn-secondary flex-1">
+            Voltar
+          </button>
+          {booking.status === "PENDING" && (
+            <button onClick={() => setShowCancelConfirm(true)} className="btn-secondary flex-1 text-danger border-danger/20 hover:bg-danger/5">
+              Cancelar
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-t-2xl sm:rounded-2xl bg-surface border border-border p-6 animate-fade-in-up">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-danger/10">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-text">Cancelar Reserva</h3>
+                <p className="text-sm text-text-3">Tem certeza? Esta ação não pode ser desfeita.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-2">
+              <button onClick={() => setShowCancelConfirm(false)} className="btn-secondary flex-1" disabled={cancelling}>
+                Não, manter
+              </button>
+              <button onClick={handleCancel} disabled={cancelling} className="flex-1 rounded-xl bg-danger px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-danger/80 disabled:opacity-50">
+                {cancelling ? "Cancelando..." : "Sim, cancelar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -28,7 +28,7 @@ export default function HomePage() {
       {/* Search */}
       <Link href="/search" className="relative group block">
         <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-text-3 group-hover:text-primary transition-colors" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-        <div className="input-base pl-11 text-text-3 cursor-text">Buscar campo...</div>
+        <div className="input-base text-text-3 cursor-text" style={{ paddingLeft: "44px" }}>Buscar campo...</div>
       </Link>
 
       {/* Stats */}
