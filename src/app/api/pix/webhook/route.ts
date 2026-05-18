@@ -44,6 +44,18 @@ export async function POST(request: Request) {
       }
     }
 
+    // Quando MP confirmar reembolso, remove os créditos
+    if (paymentInfo.status === "refunded") {
+      const contribution = await prisma.paymentContribution.findFirst({
+        where: { paymentId: String(paymentId) },
+      });
+      if (contribution) {
+        await prisma.credit.deleteMany({
+          where: { bookingId: contribution.bookingId, userId: contribution.userId, used: false },
+        });
+      }
+    }
+
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook error:", error);
