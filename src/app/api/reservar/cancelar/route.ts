@@ -26,6 +26,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Reserva não encontrada." }, { status: 404 });
     }
 
+    console.log(`Cancel attempt: bookingId=${bookingId}, status=${booking.status}, userId=${userId}, ownerId=${booking.userId}`);
+
     if (booking.status !== "PENDING") {
       return NextResponse.json({ error: `Reserva não pode ser cancelada. Status atual: ${booking.status}.` }, { status: 400 });
     }
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
     const isParticipant = booking.contributions.some((c) => c.userId === userId) || booking.participants.some((p) => p.userId === userId);
 
     if (!isOwner && !isParticipant) {
-      return NextResponse.json({ error: "Você não pode cancelar esta reserva." }, { status: 403 });
+      return NextResponse.json({ error: `Você não pode cancelar esta reserva. (owner=${booking.userId}, user=${userId})` }, { status: 403 });
     }
 
     const hasPaid = booking.contributions.some((c) => c.paid);
