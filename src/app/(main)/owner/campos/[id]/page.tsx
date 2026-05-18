@@ -74,7 +74,7 @@ export default function DetalhesCampo() {
     return (
       <div className="flex flex-col items-center gap-4 py-16">
         <p className="text-text-3">Campo não encontrado.</p>
-        <Link href="/owner" className="btn-primary">Voltar</Link>
+        <Link href="/owner/dashboard" className="btn-primary">Voltar</Link>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function DetalhesCampo() {
     <div className="space-y-5 stagger">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/owner" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors">
+        <Link href="/owner/dashboard" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-2">
             <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
           </svg>

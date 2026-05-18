@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PhotoUpload } from "@/components/photo-upload";
 
 export default function CadastroCampo() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function CadastroCampo() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     const { name, value } = e.target;
@@ -58,6 +60,15 @@ export default function CadastroCampo() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Erro ao cadastrar campo."); setLoading(false); return; }
+
+      if (photos.length > 0) {
+        await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fieldId: data.id, photos }),
+        });
+      }
+
       router.push("/owner"); router.refresh();
     } catch { setError("Erro ao conectar com o servidor."); setLoading(false); }
   }
@@ -65,7 +76,7 @@ export default function CadastroCampo() {
   return (
     <div className="space-y-6 stagger">
       <div className="flex items-center gap-3">
-        <Link href="/owner" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors text-text-2">
+        <Link href="/owner/dashboard" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors text-text-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
         </Link>
         <div>
@@ -149,8 +160,10 @@ export default function CadastroCampo() {
           <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="input-base" placeholder="Gramado, iluminação, estacionamento..." />
         </div>
 
+        <PhotoUpload photos={photos} onChange={setPhotos} maxPhotos={3} />
+
         <div className="flex gap-3 pt-2">
-          <Link href="/owner" className="btn-secondary flex-1 text-center">Cancelar</Link>
+          <Link href="/owner/dashboard" className="btn-secondary flex-1 text-center">Cancelar</Link>
           <button type="submit" disabled={loading} className="btn-primary flex-1">
             {loading ? "Salvando..." : "Cadastrar Campo"}
           </button>

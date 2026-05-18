@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 const menuItems = [
   { id: "dados", label: "Meus Dados", icon: UserIcon, href: "/menu/dados" },
   { id: "favoritos", label: "Campos Favoritos", icon: HeartIcon, href: "/menu/favoritos" },
+  { id: "avaliacoes", label: "Avaliações", icon: StarIcon, href: "/menu/avaliacoes" },
   { id: "cartoes", label: "Meus Cartões", icon: CreditCardIcon, href: "/menu/cartoes" },
   { id: "seguranca", label: "Segurança", icon: ShieldIcon, href: "/menu/seguranca" },
   { id: "historico", label: "Histórico", icon: ClockIcon, href: "/menu/historico" },
@@ -50,7 +51,7 @@ export default function MenuPage() {
       {/* Owner Link */}
       {(session?.user as any)?.role === "FIELD_OWNER" && (
         <Link
-          href="/owner"
+          href="/owner/dashboard"
           className="card flex items-center gap-3 p-4 border-primary/20"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -95,6 +96,7 @@ export default function MenuPage() {
   );
 }
 
+function StarIcon() { return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>); }
 function UserIcon() { return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>); }
 function HeartIcon() { return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>); }
 function CreditCardIcon() { return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>); }
