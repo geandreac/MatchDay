@@ -42,6 +42,7 @@ export async function GET(request: Request) {
         const dist = calcularDistancia(userLat, userLng, f.latitude!, f.longitude!);
         return { ...f, distanciaKm: Math.round(dist * 10) / 10 };
       })
+      .filter((f) => f.distanciaKm <= 5)
       .sort((a, b) => (a.distanciaKm ?? Infinity) - (b.distanciaKm ?? Infinity)) as any;
   }
 

@@ -123,15 +123,19 @@ export default function DetalhesCampo() {
         ))}
       </div>
 
-      {/* Toggle Active */}
-      <button onClick={toggleActive}
-        className={`w-full rounded-xl py-3 text-sm font-medium transition-all duration-300 ${
-          field.active
-            ? "btn-secondary text-text-3"
-            : "btn-primary"
-        }`}>
-        {field.active ? "Desativar Campo" : "Ativar Campo"}
-      </button>
+      {/* Toggle Active & Edit */}
+      <div className="flex gap-3">
+        <button onClick={toggleActive}
+          className={`flex-1 rounded-xl py-3 text-sm font-medium transition-all duration-300 ${
+            field.active ? "btn-secondary text-text-3" : "btn-primary"
+          }`}>
+          {field.active ? "Desativar" : "Ativar"}
+        </button>
+        <Link href={`/owner/editar/${field.id}`}
+          className="flex-1 rounded-xl py-3 text-sm font-medium transition-all duration-300 text-center bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20">
+          Editar Campo
+        </Link>
+      </div>
 
       {/* Generate Link */}
       <div className="card p-5">

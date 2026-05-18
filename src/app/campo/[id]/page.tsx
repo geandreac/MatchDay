@@ -10,7 +10,7 @@ interface CampoData {
   description: string | null; capacity: number; pricePerHour: number;
   startHour: number; endHour: number; photos: string[];
   avgRating: number | null; totalRatings: number;
-  availableDays: number[];
+  availableDays: number[]; latitude?: number; longitude?: number;
   activeBookings: { date: string; startHour: number; endHour: number }[];
   owner: { name: string };
 }
@@ -166,6 +166,20 @@ export default function CampoDetalhes() {
           <h3 className="text-xs font-semibold text-text-2 tracking-wide uppercase mb-2">Localização</h3>
           <p className="text-sm text-text">{campo.address}</p>
           <p className="text-xs text-text-3 mt-0.5">{campo.city}{campo.state ? `, ${campo.state}` : ""}</p>
+          {campo.latitude && campo.longitude && (
+            <div className="flex gap-2 mt-3">
+              <a href={`https://www.google.com/maps/dir/?api=1&destination=${campo.latitude},${campo.longitude}`} target="_blank" rel="noopener noreferrer"
+                className="flex-1 btn-secondary text-xs text-center flex items-center justify-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Google Maps
+              </a>
+              <a href={`https://waze.com/ul?ll=${campo.latitude},${campo.longitude}&navigate=yes`} target="_blank" rel="noopener noreferrer"
+                className="flex-1 btn-secondary text-xs text-center flex items-center justify-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Waze
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Photos */}

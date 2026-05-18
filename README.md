@@ -1,104 +1,55 @@
 # ⚽ MatchDay
 
-**Marque seu futebol, divida o pagamento e jogue sem preocupação.**
+**Agende campos de futebol, divida o pagamento e jogue sem preocupação.**
 
-MatchDay é uma plataforma web que conecta jogadores aos melhores campos de futebol, resolvendo os problemas de atraso, inadimplência e desorganização na divisão de pagamentos.
-
----
-
-## 📋 O Problema
-
-Em muitas cidades, os campos de futebol pagos enfrentam os mesmos problemas:
-
-- **Atrasos** — jogadores marcados não aparecem no horário
-- **Inadimplência** — falta de pagamento de alguns participantes
-- **Divisão desorganizada** — um participante precisa bancar o valor total e depois cobrar os outros
-- **Desconforto** — o dono do campo fica no meio das cobranças
-- **Comunicação falha** — sem confirmação de presença ou pagamento
-
-## ✅ A Solução
-
-O **MatchDay** automatiza todo o processo:
-
-1. **Dono do campo** cadastra seu espaço, define horários e preços
-2. **Gera um link de reserva** e compartilha com os jogadores
-3. **Cada jogador** entra na reserva pelo link e paga sua parte
-4. **Regra dos 50%** — se o mínimo não for atingido 2 dias antes, todos são reembolsados automaticamente
-5. **Se o mínimo for atingido**, a reserva é confirmada automaticamente
+MatchDay é uma plataforma web que conecta jogadores aos melhores campos de futebol.  
+Reserve horários, pague via PIX, compartilhe o link com os amigos e cada um contribui com o valor que quiser.
 
 ---
 
 ## 🚀 Funcionalidades
 
-### 👤 Para Jogadores
+### 👤 Jogador
 - Cadastro com validação de CPF e maioridade
-- Login por email ou CPF
 - Busca de campos por nome, cidade ou proximidade (geolocalização)
-- Reservas com status em tempo real
-- Pagamento individual via PIX
-- Histórico completo de partidas
-- Favoritar campos para acesso rápido
+- Reserva com seleção de data e horários consecutivos
+- PIX real (Mercado Pago) com QR Code
+- Lista compartilhada: cada um paga quanto quiser
+- Cancelamento de reserva
+- Avaliação dos campos pós-partida (⭐)
+- Créditos na plataforma (reembolso instantâneo)
+- Modo claro / escuro
+- PWA — instalável na tela inicial
 
-### 🏟️ Para Donos de Campo
-- Cadastro completo do campo (nome, endereço, fotos, capacidade)
-- Configuração de faixa horária e preço por hora
-- Geração de links de reserva compartilháveis
-- Dashboard com reservas e status
-- Ativação/desativação do campo
-- Regra automática de 50% com reembolso
+### 🏟️ Dono de Campo
+- Cadastro completo do campo (nome, endereço, CEP, fotos, preço, horários)
+- Dashboard com faturamento, partidas e taxa MatchDay (5%)
+- Editar dados do campo
+- Gerar link de reserva compartilhável
+- Cancelar reservas com reembolso automático via PIX
 
-### 🎨 Experiência
-- Tema escuro premium com design sport
-- Interface mobile-first
-- PWA (instalável na tela inicial)
-- Navegação com 4 abas principais
-- Modo offline com fallback
-- Animações e micro-interações
+### 🛠️ Admin
+- Relatórios financeiros (receita total, taxas)
+- Gestão de usuários e campos
 
 ---
 
-## 🛠️ Stack Tecnológica
+## 🛠️ Stack
 
 | Camada | Tecnologia |
 |--------|------------|
-| **Frontend** | Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 |
-| **Backend** | Next.js API Routes (Server Components) |
-| **Banco** | PostgreSQL (Supabase) |
-| **ORM** | Prisma 7 |
-| **Auth** | NextAuth.js (Credentials + JWT) |
-| **Pagamento** | PIX (simulado) |
-| **PWA** | Service Worker + Manifest |
-| **Deploy** | Vercel (frontend) + Supabase (banco) |
+| Frontend | Next.js 16 + TypeScript + Tailwind CSS v4 |
+| Backend | Next.js API Routes |
+| Database | PostgreSQL (Neon) |
+| ORM | Prisma 7 |
+| Auth | NextAuth.js |
+| Pagamento | Mercado Pago (PIX) |
+| Storage | Supabase (fotos) |
+| Deploy | Vercel |
 
 ---
 
-## 📁 Estrutura do Projeto
-
-```
-src/
-├── app/
-│   ├── (auth)/          # Login e Cadastro
-│   ├── (main)/          # Home, Busca, Agendamentos, Menu, Owner
-│   ├── api/             # API Routes (auth, fields, bookings, payments)
-│   ├── reservar/        # Página pública de reserva
-│   ├── offline/         # Página offline
-│   ├── manifest.ts      # PWA manifest
-│   └── icon.tsx         # Favicon
-├── components/
-│   ├── header.tsx       # Header com data e back button
-│   ├── bottom-nav.tsx   # Navegação inferior
-│   ├── providers.tsx    # SessionProvider
-│   └── sw-register.tsx  # Service Worker
-└── lib/
-    ├── auth.ts          # Config NextAuth
-    ├── prisma.ts        # Prisma Client
-    ├── regra50.ts       # Lógica da regra 50%
-    └── validations.ts   # CPF, idade, datas
-```
-
----
-
-## 🧪 Começando
+## 📦 Como Rodar
 
 ```bash
 # Clone
@@ -108,13 +59,12 @@ cd MatchDay
 # Instalar dependências
 npm install
 
-# Configurar variáveis de ambiente
+# Configurar ambiente
 cp .env.example .env
-# Edite .env com sua DATABASE_URL do Supabase
+# Preencha DATABASE_URL com sua Neon connection string
 
-# Sincronizar banco e popular dados
+# Sincronizar banco
 npx prisma db push
-curl -X POST http://localhost:3000/api/seed
 
 # Iniciar dev server
 npm run dev
@@ -122,77 +72,57 @@ npm run dev
 
 Acesse **http://localhost:3000**
 
-### Contas de Teste
+---
+
+## 🔐 Contas de Teste
 
 | Login | Senha | Tipo |
 |-------|-------|------|
 | `dono@email.com` | `123456` | Dono de campo |
-| `joao@email.com` | `123456` | Dono de campo |
 | `jogador@email.com` | `123456` | Jogador |
 
 ---
 
-## 📊 Rotas da Aplicação
-
-### Páginas
-| Rota | Descrição |
-|------|-----------|
-| `/` | Redireciona conforme autenticação |
-| `/login` | Login (email ou CPF + senha) |
-| `/register` | Cadastro com validação de CPF |
-| `/home` | Início com busca, último agendamento, favorito |
-| `/search` | Busca com filtros (nome, cidade, proximidade) |
-| `/bookings` | Lista de agendamentos |
-| `/menu` | Menu com perfil e configurações |
-| `/owner` | Dashboard do dono de campo |
-| `/owner/cadastro` | Cadastro de novo campo |
-| `/owner/campos/[id]` | Detalhes e gerenciamento do campo |
-| `/reservar/[link]` | Página pública de reserva |
-
-### API
-| Rota | Descrição |
-|------|-----------|
-| `POST /api/auth/[...nextauth]` | Autenticação |
-| `POST /api/register` | Cadastro de usuário |
-| `GET/POST /api/fields` | Listar/criar campos |
-| `GET/PUT /api/fields/[id]` | Detalhes/atualizar campo |
-| `POST /api/fields/[id]/share-link` | Gerar link de reserva |
-| `GET /api/fields/search` | Buscar campos (com geolocalização) |
-| `GET /api/bookings` | Listar reservas do usuário |
-| `GET/POST /api/favorites` | Favoritar/desfavoritar campos |
-| `PUT/POST /api/user` | Atualizar perfil / alterar senha |
-| `GET /api/reservar/[linkId]` | Dados da reserva pública |
-| `POST /api/reservar/[linkId]/participar` | Entrar na reserva |
-| `POST /api/reservar/[linkId]/pagar` | Pagar via PIX |
-
----
-
-## 📐 Modelo de Dados
+## 📂 Estrutura
 
 ```
-User → Field (dono)
-User → Booking (organizador)
-User → Participant (jogador)
-User → Payment (pagador)
-User → Favorite (favoritou)
-Field → Booking
-Booking → Participant
-Booking → Payment
+src/
+├── app/
+│   ├── (auth)/        # Login e Cadastro
+│   ├── (main)/        # Home, Busca, Agenda, Menu, Owner
+│   ├── api/           # API routes
+│   ├── campo/         # Página pública do campo
+│   ├── reservar/      # Página de pagamento
+│   ├── admin/         # Painel administrativo
+│   ├── termos/        # Termos de uso
+│   └── privacidade/   # Política de privacidade
+├── components/        # Componentes reutilizáveis
+├── lib/               # Utilitários (auth, prisma, mercadopago, validações)
+└── generated/         # Prisma Client
 ```
 
 ---
 
-## 🔮 Próximos Passos
+## 📊 Rotas da API
 
-- [ ] Pagamento PIX real (Mercado Pago)
-- [ ] Upload de fotos dos campos
-- [ ] Avaliações e notas dos campos
-- [ ] Notificações push e email
-- [ ] Modo claro
-- [ ] Administrador global
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| POST | `/api/auth/[...nextauth]` | Autenticação |
+| GET/POST | `/api/fields` | Listar/criar campos |
+| GET/PUT | `/api/fields/[id]` | Detalhes/atualizar |
+| GET | `/api/fields/search` | Buscar com geolocalização |
+| POST | `/api/pix/criar` | Gerar PIX |
+| POST | `/api/pix/verificar` | Verificar pagamento |
+| POST | `/api/pix/webhook` | Webhook Mercado Pago |
+| POST | `/api/reservar/criar` | Criar reserva |
+| POST | `/api/reservar/cancelar` | Cancelar + reembolso |
+| POST | `/api/ratings` | Avaliar campo |
+| POST | `/api/upload` | Upload de fotos |
+| GET | `/api/credits` | Saldo de créditos |
+| GET | `/api/admin/reports` | Relatórios admin |
 
 ---
 
-## 📝 Licença
+## 📄 Licença
 
 MIT
