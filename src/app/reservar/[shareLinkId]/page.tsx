@@ -234,10 +234,16 @@ export default function ReservarPage() {
         )}
 
         {/* Share Link */}
-        <div className="card p-4">
+            <div className="card p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-semibold text-text-2 uppercase tracking-wide">Compartilhar</h3>
-            <button onClick={copyLink} className="text-xs text-primary hover:underline">Copiar link</button>
+            <div className="flex gap-2">
+              <button onClick={() => {
+                const msg = encodeURIComponent(`⚽ Bora jogar! Reservei no MatchDay: ${booking.shareLink}`);
+                window.open(`https://wa.me/?text=${msg}`, "_blank");
+              }} className="text-xs font-medium text-primary hover:underline">WhatsApp</button>
+              <button onClick={copyLink} className="text-xs text-primary hover:underline">Copiar link</button>
+            </div>
           </div>
           <p className="mt-1 text-xs text-text-3 truncate">{booking.shareLink}</p>
         </div>

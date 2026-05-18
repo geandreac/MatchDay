@@ -16,9 +16,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MatchDay - Agende seu futebol",
-  description:
-    "Marque seu futebol, divida o pagamento e jogue sem preocupação.",
+  description: "Marque seu futebol, divida o pagamento e jogue sem preocupação. Encontre campos perto de você, reserve horários e pague via PIX.",
   manifest: "/manifest.webmanifest",
+  keywords: ["futebol", "campo de futebol", "reserva de campo", "pelada", "futebol society", "MatchDay"],
+  openGraph: {
+    title: "MatchDay - Agende seu futebol",
+    description: "Marque seu futebol, divida o pagamento e jogue sem preocupação.",
+    type: "website",
+    locale: "pt_BR",
+    siteName: "MatchDay",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
