@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import Image from "next/image";
 
 interface Contribution {
   id: string; amount: number; paid: boolean; paidAt: string | null;
@@ -31,14 +32,14 @@ export default function ReservarPage() {
   const [currentPix, setCurrentPix] = useState<{ qrCode: string; qrCodeBase64: string | null } | null>(null);
   const [lastContributionId, setLastContributionId] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
-  const [verifying, setVerifying] = useState(false);
   const [msg, setMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [creditBalance, setCreditBalance] = useState(0);
   const [useCredits, setUseCredits] = useState(false);
 
-  useEffect(() => { load(); }, [params]);
+  useEffect(() => { const run = async () => { await load(); }; run(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function load() {
     const id = (await params).shareLinkId;
@@ -202,7 +203,7 @@ export default function ReservarPage() {
               <div className="text-center space-y-3 pt-2 animate-fade-in-up">
                 <div className="mx-auto w-48 h-48 rounded-xl bg-white p-3 flex items-center justify-center">
                   {currentPix.qrCodeBase64 ? (
-                    <img src={`data:image/png;base64,${currentPix.qrCodeBase64}`} alt="QR Code PIX" className="w-full h-full" />
+                    <Image src={`data:image/png;base64,${currentPix.qrCodeBase64}`} alt="QR Code PIX" width={192} height={192} className="w-full h-full" />
                   ) : (
                     <p className="text-xs text-black break-all font-mono">{currentPix.qrCode}</p>
                   )}

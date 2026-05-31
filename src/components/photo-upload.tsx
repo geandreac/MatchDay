@@ -45,7 +45,7 @@ export function PhotoUpload({ photos, onChange, maxPhotos = 3 }: {
       <div className="grid grid-cols-3 gap-2">
         {previews.map((url, i) => (
           <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-border bg-surface-2 group">
-            <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+            <Image src={url} alt={`Foto ${i + 1}`} fill className="object-cover" sizes="(max-width: 768px) 33vw, 150px" />
             <button onClick={() => remove(i)}
               className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs">
               ✕

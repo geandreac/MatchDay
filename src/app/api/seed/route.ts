@@ -2,7 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (process.env.NODE_ENV !== "development" && process.env.VERCEL_ENV !== "preview") {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const token = searchParams.get("token");
+  if (!token || token !== process.env.SEED_TOKEN) {
+    return NextResponse.json({ error: "Token inválido." }, { status: 403 });
+  }
+
   try {
     const password = await bcrypt.hash("123456", 12);
 

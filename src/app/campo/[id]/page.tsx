@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 
 interface CampoData {
@@ -40,7 +41,11 @@ function generateDates(availableDays: number[], weeks = 4) {
   return dates;
 }
 
-function generateTimeSlots(startH: number, endH: number, activeBookings: any[], dateStr: string) {
+interface ActiveBooking {
+  date: string; startHour: number; endHour: number;
+}
+
+function generateTimeSlots(startH: number, endH: number, activeBookings: ActiveBooking[], dateStr: string) {
   const slots: { hour: number; available: boolean }[] = [];
   const dayBookings = activeBookings.filter((b) => {
     const bDate = new Date(b.date);
@@ -121,7 +126,7 @@ export default function CampoDetalhes() {
       <div className="relative h-56 bg-gradient-to-b from-primary/20 to-background overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center">
           {campo.photos.length > 0 ? (
-            <img src={campo.photos[0]} alt={campo.name} className="h-full w-full object-cover opacity-40" />
+            <Image src={campo.photos[0]} alt={campo.name} fill className="object-cover opacity-40" sizes="100vw" />
           ) : (
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="1" className="opacity-30"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           )}
@@ -189,7 +194,7 @@ export default function CampoDetalhes() {
             <div className="grid grid-cols-3 gap-2">
               {campo.photos.map((url, i) => (
                 <div key={i} className="aspect-square rounded-xl bg-surface-2 overflow-hidden border border-border">
-                  <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+                  <Image src={url} alt={`Foto ${i + 1}`} fill className="object-cover" sizes="(max-width: 768px) 33vw, 150px" />
                 </div>
               ))}
             </div>

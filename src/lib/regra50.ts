@@ -21,17 +21,15 @@ export async function verificarRegra50(bookingId: string) {
     });
   }
 
-  await prisma.$transaction(
-    booking.payments.map((p) =>
-      prisma.payment.update({
-        where: { id: p.id },
-        data: { status: "REFUNDED", refunded: true },
-      })
-    )
-  );
+  return prisma.$transaction(async (tx) => {
+    await tx.payment.updateMany({
+      where: { bookingId, status: { not: "REFUNDED" } },
+      data: { status: "REFUNDED", refunded: true },
+    });
 
-  return prisma.booking.update({
-    where: { id: bookingId },
-    data: { status: "REFUNDED", paidValue: 0 },
+    return tx.booking.update({
+      where: { id: bookingId },
+      data: { status: "REFUNDED", paidValue: 0 },
+    });
   });
 }

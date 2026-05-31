@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 export default function Cartoes() {
   return (
     <div className="space-y-5">

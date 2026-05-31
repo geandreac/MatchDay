@@ -3,16 +3,40 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+interface AdminReports {
+  totalUsers: number;
+  totalFields: number;
+  totalBookings: number;
+  totalRevenue: number;
+  platformFees: number;
+}
+
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
+interface AdminField {
+  id: string;
+  name: string;
+  city: string;
+  owner?: { name: string };
+  _count?: { bookings: number };
+}
+
 export default function AdminPage() {
-  const [reports, setReports] = useState<any>(null);
-  const [users, setUsers] = useState<any[]>([]);
-  const [fields, setFields] = useState<any[]>([]);
+  const [reports, setReports] = useState<AdminReports | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [fields, setFields] = useState<AdminField[]>([]);
   const [tab, setTab] = useState("reports");
 
   useEffect(() => {
     fetch("/api/admin/reports").then((r) => r.json()).then(setReports).catch(() => {});
-    fetch("/api/admin/users").then((r) => r.json()).then((d) => setUsers(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch("/api/admin/fields-list").then((r) => r.json()).then((d) => setFields(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch("/api/admin/users").then((r) => r.json()).then((d: AdminUser[]) => setUsers(Array.isArray(d) ? d : [])).catch(() => {});
+    fetch("/api/admin/fields-list").then((r) => r.json()).then((d: AdminField[]) => setFields(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   const tabs = [
@@ -40,11 +64,11 @@ export default function AdminPage() {
       {tab === "reports" && reports && (
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Usuários", value: reports.totalUsers, icon: "👥" },
-            { label: "Campos", value: reports.totalFields, icon: "🏟️" },
-            { label: "Reservas", value: reports.totalBookings, icon: "📅" },
-            { label: "Receita", value: `R$ ${Number(reports.totalRevenue).toFixed(0)}`, icon: "💰" },
-            { label: "Taxa MatchDay", value: `R$ ${Number(reports.platformFees).toFixed(0)}`, icon: "📊" },
+            { label: "Usuários", value: reports.totalUsers, icon: "\u{1F465}" },
+            { label: "Campos", value: reports.totalFields, icon: "\u{1F3DF}\uFE0F" },
+            { label: "Reservas", value: reports.totalBookings, icon: "\u{1F4C5}" },
+            { label: "Receita", value: `R$ ${Number(reports.totalRevenue).toFixed(0)}`, icon: "\u{1F4B0}" },
+            { label: "Taxa MatchDay", value: `R$ ${Number(reports.platformFees).toFixed(0)}`, icon: "\u{1F4CA}" },
           ].map((item) => (
             <div key={item.label} className="card p-4">
               <p className="text-2xl mb-1">{item.icon}</p>
@@ -76,7 +100,7 @@ export default function AdminPage() {
           {fields.length === 0 ? <p className="text-text-3">Nenhum campo.</p> : fields.map((f) => (
             <div key={f.id} className="card p-3">
               <p className="text-sm font-medium text-text">{f.name}</p>
-              <p className="text-xs text-text-3">{f.city} • Dono: {f.owner?.name} • {f._count?.bookings} reservas</p>
+              <p className="text-xs text-text-3">{f.city} &bull; Dono: {f.owner?.name} &bull; {f._count?.bookings} reservas</p>
             </div>
           ))}
         </div>

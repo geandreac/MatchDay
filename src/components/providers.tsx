@@ -2,11 +2,11 @@
 
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "./theme-provider";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
       <ThemeProvider>{children}</ThemeProvider>
     </SessionProvider>
   );

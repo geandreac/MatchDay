@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { validarCPF, validarIdade } from "@/lib/validations";
+import { validarCPF, validarIdade, validarSenha } from "@/lib/validations";
 
 export async function POST(request: Request) {
   try {
@@ -19,6 +19,11 @@ export async function POST(request: Request) {
     const idade = validarIdade(new Date(birthDate));
     if (!idade.valido) {
       return NextResponse.json({ error: idade.mensagem }, { status: 400 });
+    }
+
+    const senha = validarSenha(password);
+    if (!senha.valido) {
+      return NextResponse.json({ error: senha.mensagem }, { status: 400 });
     }
 
     const emailExistente = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });

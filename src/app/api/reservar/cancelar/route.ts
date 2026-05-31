@@ -49,35 +49,43 @@ export async function POST(request: Request) {
     if (isOwner && hasPaid) {
       const paidContributions = booking.contributions.filter((c) => c.paid);
 
-      // Cria créditos instantâneos para cada jogador
-      for (const c of paidContributions) {
-        await prisma.credit.create({
-          data: {
-            userId: c.userId,
-            bookingId: booking.id,
-            amount: c.amount,
-            expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-          },
+      await prisma.$transaction(async (tx) => {
+        for (const c of paidContributions) {
+          await tx.credit.create({
+            data: {
+              userId: c.userId,
+              bookingId: booking.id,
+              amount: c.amount,
+              expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+            },
+          });
+        }
+
+        await tx.paymentContribution.updateMany({
+          where: { bookingId: booking.id },
+          data: { paid: false },
         });
-      }
+
+        await tx.booking.update({
+          where: { id: bookingId },
+          data: { status: "CANCELLED", paidValue: 0 },
+        });
+      });
 
       // Reembolso Mercado Pago em background (não bloqueia)
       for (const c of paidContributions) {
         if (c.paymentId) {
-          reembolsarPagamento(Number(c.paymentId)).catch(() => {});
+          reembolsarPagamento(Number(c.paymentId)).catch(() => {
+            console.error(`Falha ao reembolsar paymentId=${c.paymentId}`);
+          });
         }
       }
-
-      await prisma.paymentContribution.updateMany({
-        where: { bookingId: booking.id },
-        data: { paid: false },
+    } else {
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: { status: "CANCELLED", paidValue: 0 },
       });
     }
-
-    await prisma.booking.update({
-      where: { id: bookingId },
-      data: { status: "CANCELLED", paidValue: 0 },
-    });
 
     return NextResponse.json({ message: "Reserva cancelada com sucesso." });
   } catch (error) {

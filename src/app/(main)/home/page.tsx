@@ -3,10 +3,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+interface LastBookingItem {
+  field?: { name?: string };
+  date: string;
+  status: string;
+}
+
+interface FavoriteFieldItem {
+  name: string;
+  city: string;
+}
+
 export default function HomePage() {
-  const [search, setSearch] = useState("");
-  const [lastBooking, setLastBooking] = useState<any>(null);
-  const [favoriteField, setFavoriteField] = useState<any>(null);
+  const [lastBooking, setLastBooking] = useState<LastBookingItem | null>(null);
+  const [favoriteField, setFavoriteField] = useState<FavoriteFieldItem | null>(null);
   const [stats, setStats] = useState({ campos: 0, partidas: 0 });
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { validarCPF } from "./validations";
+import { validarCPF } from "@/lib/validations";
 
 describe("MatchDay Utils", () => {
   describe("validarCPF", () => {

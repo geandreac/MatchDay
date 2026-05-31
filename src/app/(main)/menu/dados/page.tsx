@@ -1,22 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function MeusDados() {
   const { data: session, update } = useSession();
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [form, setForm] = useState({
+    name: session?.user?.name ?? "",
+    email: session?.user?.email ?? "",
+    phone: "",
+  });
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (session?.user) {
-      setForm({ name: session.user.name ?? "", email: session.user.email ?? "", phone: "" });
-    }
-  }, [session]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setMessage(null);
@@ -72,4 +69,3 @@ export default function MeusDados() {
     </div>
   );
 }
-

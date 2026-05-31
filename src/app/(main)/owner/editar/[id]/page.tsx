@@ -11,13 +11,15 @@ export default function EditarCampo() {
     name: "", cep: "", address: "", city: "", state: "", description: "",
     capacity: "10", pricePerHour: "", startHour: "17", endHour: "23",
   });
+  const [fieldId, setFieldId] = useState<string>("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const id = (await params).id;
+      const id = (await params).id as string;
+      setFieldId(id);
       const res = await fetch(`/api/fields/${id}`);
       if (res.ok) {
         const f = await res.json();
@@ -64,7 +66,7 @@ export default function EditarCampo() {
   return (
     <div className="space-y-6 stagger">
       <div className="flex items-center gap-3">
-        <Link href={`/owner/campos/${(params as any).id}`} className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors text-text-2">
+        <Link href={`/owner/campos/${fieldId}`} className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors text-text-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
         </Link>
         <div>
@@ -124,7 +126,7 @@ export default function EditarCampo() {
         </div>
 
         <div className="flex gap-3 pt-2">
-          <Link href={`/owner/campos/${(params as any).id}`} className="btn-secondary flex-1 text-center">Cancelar</Link>
+          <Link href={`/owner/campos/${fieldId}`} className="btn-secondary flex-1 text-center">Cancelar</Link>
           <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? "Salvando..." : "Salvar"}</button>
         </div>
       </form>

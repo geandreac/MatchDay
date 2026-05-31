@@ -18,6 +18,19 @@ export async function POST(request: Request) {
   const startDate = new Date(date + "T12:00:00");
   startDate.setHours(startHour, 0, 0, 0);
 
+  const conflicting = await prisma.booking.findFirst({
+    where: {
+      fieldId,
+      date: startDate,
+      status: { in: ["PENDING", "CONFIRMED"] },
+      startHour: { lt: endHour },
+      endHour: { gt: startHour },
+    },
+  });
+  if (conflicting) {
+    return NextResponse.json({ error: "Horário já reservado." }, { status: 409 });
+  }
+
   const paymentDeadline48h = new Date(startDate);
   paymentDeadline48h.setHours(paymentDeadline48h.getHours() - 48);
 

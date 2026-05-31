@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { validarSenha } from "@/lib/validations";
 
 export async function PUT(request: Request) {
   const session = await auth();
@@ -11,9 +12,16 @@ export async function PUT(request: Request) {
 
   try {
     const { name, email, phone } = await request.json();
-    const data: any = {};
+    const data: Record<string, string> = {};
     if (name) data.name = name;
-    if (email) data.email = email.toLowerCase();
+    if (email) {
+      const emailLower = email.toLowerCase();
+      const existing = await prisma.user.findUnique({ where: { email: emailLower } });
+      if (existing && existing.id !== session.user.id) {
+        return NextResponse.json({ error: "Email já cadastrado por outro usuário." }, { status: 409 });
+      }
+      data.email = emailLower;
+    }
     if (phone !== undefined) data.phone = phone;
 
     const user = await prisma.user.update({
@@ -40,8 +48,9 @@ export async function POST(request: Request) {
     if (!currentPassword || !newPassword) {
       return NextResponse.json({ error: "Senha atual e nova são obrigatórias." }, { status: 400 });
     }
-    if (newPassword.length < 6) {
-      return NextResponse.json({ error: "Nova senha deve ter pelo menos 6 caracteres." }, { status: 400 });
+    const senhaCheck = validarSenha(newPassword);
+    if (!senhaCheck.valido) {
+      return NextResponse.json({ error: senhaCheck.mensagem }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({ where: { id: session.user.id as string } });

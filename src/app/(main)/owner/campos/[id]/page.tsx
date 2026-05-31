@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 
 interface FieldData {
@@ -12,7 +12,7 @@ interface FieldData {
 }
 
 export default function DetalhesCampo() {
-  const params = useParams(); const router = useRouter();
+  const params = useParams();
   const [field, setField] = useState<FieldData | null>(null);
   const [loading, setLoading] = useState(true);
   const [generatingLink, setGeneratingLink] = useState(false);

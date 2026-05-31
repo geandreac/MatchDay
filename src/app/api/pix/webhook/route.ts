@@ -1,10 +1,40 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buscarPagamento } from "@/lib/mercadopago";
+import crypto from "crypto";
+
+function verifyMPSignature(request: Request, rawBody: string): boolean {
+  const signature = request.headers.get("x-signature");
+  const requestId = request.headers.get("x-request-id");
+  if (!signature || !requestId) return false;
+
+  const parts = signature.split(",").reduce<Record<string, string>>((acc, part) => {
+    const [key, value] = part.split("=");
+    if (key && value) acc[key.trim()] = value.trim();
+    return acc;
+  }, {});
+
+  const ts = parts["ts"];
+  const v1 = parts["v1"];
+  if (!ts || !v1) return false;
+
+  const secret = process.env.MP_WEBHOOK_SECRET;
+  if (!secret) return false;
+
+  const manifest = `${ts}\n${requestId}\n${rawBody}`;
+  const hash = crypto.createHmac("sha256", secret).update(manifest).digest("hex");
+  return v1 === hash;
+}
 
 export async function POST(request: Request) {
+  const rawBody = await request.text();
+
+  if (!verifyMPSignature(request, rawBody)) {
+    return NextResponse.json({ error: "Assinatura inválida." }, { status: 401 });
+  }
+
   try {
-    const body = await request.json();
+    const body = JSON.parse(rawBody);
     const { action, data } = body;
 
     if (action !== "payment.created" && action !== "payment.updated") {
@@ -25,26 +55,33 @@ export async function POST(request: Request) {
       });
 
       if (contribution && !contribution.paid) {
-        await prisma.paymentContribution.update({
-          where: { id: contribution.id },
-          data: { paid: true, paidAt: new Date() },
-        });
+        await prisma.$transaction(async (tx) => {
+          await tx.paymentContribution.update({
+            where: { id: contribution.id },
+            data: { paid: true, paidAt: new Date() },
+          });
 
-        const newPaidValue = Number(contribution.booking.paidValue) + Number(contribution.amount);
-        const totalValue = Number(contribution.booking.totalValue);
+          const booking = await tx.booking.findUnique({
+            where: { id: contribution.bookingId },
+            select: { paidValue: true, totalValue: true },
+          });
+          if (!booking) return;
 
-        await prisma.booking.update({
-          where: { id: contribution.bookingId },
-          data: {
-            paidValue: newPaidValue,
-            paidAt: new Date(),
-            status: newPaidValue >= totalValue ? "CONFIRMED" : "PENDING",
-          },
+          const newPaidValue = Number(booking.paidValue) + Number(contribution.amount);
+          const totalValue = Number(booking.totalValue);
+
+          await tx.booking.update({
+            where: { id: contribution.bookingId },
+            data: {
+              paidValue: newPaidValue,
+              paidAt: new Date(),
+              status: newPaidValue >= totalValue ? "CONFIRMED" : "PENDING",
+            },
+          });
         });
       }
     }
 
-    // Quando MP confirmar reembolso, remove os créditos
     if (paymentInfo.status === "refunded") {
       const contribution = await prisma.paymentContribution.findFirst({
         where: { paymentId: String(paymentId) },

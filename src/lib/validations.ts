@@ -41,6 +41,22 @@ export function validarIdade(birthDate: Date): { valido: boolean; mensagem: stri
   return { valido: true, mensagem: "" };
 }
 
+export function validarSenha(senha: string): { valido: boolean; mensagem: string } {
+  if (senha.length < 8) {
+    return { valido: false, mensagem: "A senha deve ter pelo menos 8 caracteres." };
+  }
+  if (!/[A-Z]/.test(senha)) {
+    return { valido: false, mensagem: "A senha deve conter pelo menos uma letra maiúscula." };
+  }
+  if (!/[a-z]/.test(senha)) {
+    return { valido: false, mensagem: "A senha deve conter pelo menos uma letra minúscula." };
+  }
+  if (!/[0-9]/.test(senha)) {
+    return { valido: false, mensagem: "A senha deve conter pelo menos um número." };
+  }
+  return { valido: true, mensagem: "" };
+}
+
 export function formatarData(data: Date): string {
   const dias = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
   const meses = [

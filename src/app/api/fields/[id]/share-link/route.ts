@@ -28,6 +28,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const startDate = new Date(date + "T12:00:00");
   startDate.setHours(startHour, 0, 0, 0);
 
+  const conflicting = await prisma.booking.findFirst({
+    where: {
+      fieldId: field.id,
+      date: startDate,
+      status: { in: ["PENDING", "CONFIRMED"] },
+      startHour: { lt: endHour },
+      endHour: { gt: startHour },
+    },
+  });
+  if (conflicting) {
+    return NextResponse.json({ error: "Horário já reservado." }, { status: 409 });
+  }
+
   const hours = endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
   const totalValue = hours * Number(field.pricePerHour);
   const platformFee = totalValue * 0.05;

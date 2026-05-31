@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ contribution, pix }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("PIX error:", error);
     return NextResponse.json({ error: "Erro ao gerar PIX. Tente novamente." }, { status: 500 });
   }

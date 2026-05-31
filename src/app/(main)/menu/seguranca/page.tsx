@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function Seguranca() {
-  const router = useRouter();
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -16,8 +13,8 @@ export default function Seguranca() {
     if (form.newPassword !== form.confirmPassword) {
       setMessage({ text: "As senhas não coincidem.", ok: false }); setSaving(false); return;
     }
-    if (form.newPassword.length < 6) {
-      setMessage({ text: "A senha deve ter pelo menos 6 caracteres.", ok: false }); setSaving(false); return;
+    if (form.newPassword.length < 8) {
+      setMessage({ text: "A senha deve ter pelo menos 8 caracteres.", ok: false }); setSaving(false); return;
     }
 
     const res = await fetch("/api/user", {

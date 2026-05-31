@@ -4,6 +4,21 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { validarCPF } from "./validations";
 
+declare module "next-auth" {
+  interface User {
+    cpf?: string;
+    role?: string;
+  }
+}
+
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id?: string;
+    cpf?: string;
+    role?: string;
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
@@ -45,16 +60,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.cpf = (user as any).cpf;
-        token.role = (user as any).role;
+        token.cpf = user.cpf;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as any).cpf = token.cpf;
-        (session.user as any).role = token.role;
+        session.user.cpf = token.cpf as string | undefined;
+        session.user.role = token.role as string | undefined;
       }
       return session;
     },

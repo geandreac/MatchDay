@@ -49,7 +49,7 @@ export default function MenuPage() {
       </div>
 
       {/* Owner Link */}
-      {(session?.user as any)?.role === "FIELD_OWNER" && (
+      {session?.user?.role === "FIELD_OWNER" && (
         <Link
           href="/owner/dashboard"
           className="card flex items-center gap-3 p-4 border-primary/20"

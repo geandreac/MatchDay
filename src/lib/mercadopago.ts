@@ -52,8 +52,9 @@ export async function reembolsarPagamento(paymentId: number) {
     const refund = new PaymentRefund(client);
     await refund.create({ payment_id: paymentId });
     return { refunded: true };
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error(`Refund error for payment ${paymentId}:`, error);
-    return { refunded: false, error: error.message };
+    return { refunded: false, error: message };
   }
 }

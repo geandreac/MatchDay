@@ -12,8 +12,8 @@ export async function POST(request: Request) {
   try {
     const { fieldId, photos } = await request.json();
 
-    if (!fieldId || !photos || !Array.isArray(photos) || photos.length > 3) {
-      return NextResponse.json({ error: "Máximo de 3 fotos por campo." }, { status: 400 });
+    if (!fieldId || !photos || !Array.isArray(photos) || photos.length > 8) {
+      return NextResponse.json({ error: "Máximo de 8 fotos por campo." }, { status: 400 });
     }
 
     const field = await prisma.field.findFirst({
@@ -30,9 +30,13 @@ export async function POST(request: Request) {
       urls.push(url);
     }
 
-    await prisma.field.update({
-      where: { id: fieldId },
-      data: { photos: JSON.stringify(urls) },
+    await prisma.$transaction(async (tx) => {
+      await tx.fieldPhoto.deleteMany({ where: { fieldId } });
+      for (let i = 0; i < urls.length; i++) {
+        await tx.fieldPhoto.create({
+          data: { fieldId, url: urls[i], position: i },
+        });
+      }
     });
 
     return NextResponse.json({ photos: urls }, { status: 200 });
