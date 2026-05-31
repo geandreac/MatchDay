@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { rateLimitIP } from "@/lib/rate-limit";
+import { checkRateLimitIP } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
-  const rl = rateLimitIP(request, 60 * 60 * 1000, 5);
+  const rl = await checkRateLimitIP(request, 60 * 60 * 1000, 5);
   if (!rl.allowed) {
     return NextResponse.json({ error: "Muitas requisições. Tente novamente mais tarde." }, { status: 429 });
   }
