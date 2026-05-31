@@ -18,20 +18,32 @@ export default function HomePage() {
   const [lastBooking, setLastBooking] = useState<LastBookingItem | null>(null);
   const [favoriteField, setFavoriteField] = useState<FavoriteFieldItem | null>(null);
   const [stats, setStats] = useState({ campos: 0, partidas: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/bookings").then((r) => r.json()).then((d) => {
-      if (Array.isArray(d) && d.length > 0) setLastBooking(d[0]);
-    }).catch(() => {});
-
-    fetch("/api/favorites").then((r) => r.json()).then((d) => {
-      if (Array.isArray(d) && d.length > 0) setFavoriteField(d[0]?.field);
-    }).catch(() => {});
-
-    fetch("/api/fields/search").then((r) => r.json()).then((d) => {
-      if (Array.isArray(d)) setStats((p) => ({ ...p, campos: d.length }));
-    }).catch(() => {});
+    Promise.all([
+      fetch("/api/bookings").then((r) => r.json()).then((d) => {
+        if (Array.isArray(d) && d.length > 0) setLastBooking(d[0]);
+      }),
+      fetch("/api/favorites").then((r) => r.json()).then((d) => {
+        if (Array.isArray(d) && d.length > 0) setFavoriteField(d[0]?.field);
+      }),
+      fetch("/api/fields/search").then((r) => r.json()).then((d) => {
+        if (Array.isArray(d)) setStats((p) => ({ ...p, campos: d.length }));
+      }),
+    ]).finally(() => setLoading(false));
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <p className="text-sm text-text-3">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">

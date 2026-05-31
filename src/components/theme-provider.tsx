@@ -13,7 +13,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
     const saved = localStorage.getItem("matchday-theme") as Theme | null;
-    return saved === "light" || saved === "dark" ? saved : "dark";
+    if (saved === "light" || saved === "dark") return saved;
+    if (window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+    return "dark";
   });
 
   useEffect(() => {
@@ -21,6 +23,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("matchday-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    const handler = (e: MediaQueryListEvent) => {
+      const saved = localStorage.getItem("matchday-theme");
+      if (!saved) setTheme(e.matches ? "light" : "dark");
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   function toggle() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));

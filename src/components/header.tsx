@@ -9,9 +9,10 @@ const tabPaths = ["/home", "/search", "/bookings", "/menu"];
 
 const backRoutes: Record<string, string> = {
   "/campo": "/search",
+  "/owner/editar": "/owner/dashboard",
+  "/owner/campos": "/owner/dashboard",
   "/owner/dashboard": "/menu",
   "/owner/cadastro": "/owner/dashboard",
-  "/owner/campos": "/owner/dashboard",
   "/menu/dados": "/menu",
   "/menu/favoritos": "/menu",
   "/menu/avaliacoes": "/menu",
