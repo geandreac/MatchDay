@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 const menuItems = [
   { id: "dados", label: "Meus Dados", icon: UserIcon, href: "/menu/dados" },
@@ -16,14 +18,26 @@ const menuItems = [
 export default function MenuPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const [showLogout, setShowLogout] = useState(false);
 
   async function handleLogout() {
+    setShowLogout(false);
     await signOut({ redirect: false });
     router.push("/login");
   }
 
   return (
     <div className="space-y-6 stagger">
+      <ConfirmDialog
+        open={showLogout}
+        title="Sair da Conta"
+        message="Tem certeza que deseja sair? Voce precisara fazer login novamente."
+        confirmLabel="Sair"
+        danger
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogout(false)}
+      />
+
       {/* Profile Card */}
       <div className="card p-5 relative overflow-hidden">
         <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
@@ -85,7 +99,7 @@ export default function MenuPage() {
 
       {/* Logout */}
       <button
-        onClick={handleLogout}
+        onClick={() => setShowLogout(true)}
         className="card flex w-full items-center gap-3 px-4 py-3.5 text-sm font-medium text-danger transition-all duration-200 hover:bg-danger/5 border-danger/10"
       >
         <LogOutIcon />
