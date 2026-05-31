@@ -34,7 +34,7 @@ function generateDates(availableDays: number[], weeks = 4) {
   for (let d = 0; d < weeks * 7; d++) {
     const date = new Date(today);
     date.setDate(today.getDate() + d);
-    if (availableDays.includes(date.getDay() === 0 ? 7 : date.getDay())) {
+    if (availableDays.includes(date.getDay())) {
       dates.push(date);
     }
   }

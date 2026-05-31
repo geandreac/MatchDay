@@ -51,7 +51,11 @@ export async function POST(request: Request) {
         pricePerHour: parseFloat(pricePerHour),
         startHour: parseInt(startHour),
         endHour: parseInt(endHour),
+        availableDays: {
+          create: [0, 1, 2, 3, 4, 5, 6].map((day) => ({ dayOfWeek: day })),
+        },
       },
+      include: { availableDays: true },
     });
 
     return NextResponse.json(field, { status: 201 });
