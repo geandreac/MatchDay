@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useAsync } from "@/lib/use-async";
+import { ErrorMessage } from "@/components/error-message";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface FieldData {
   id: string; name: string; address: string; city: string; state?: string;
@@ -13,28 +16,29 @@ interface FieldData {
 
 export default function DetalhesCampo() {
   const params = useParams();
-  const [field, setField] = useState<FieldData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [linkResult, setLinkResult] = useState<{ link: string; id: string } | null>(null);
   const [bookingForm, setBookingForm] = useState({ date: "", startHour: "19", endHour: "22" });
+  const [showConfirmToggle, setShowConfirmToggle] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const id = (await params).id;
-      const res = await fetch(`/api/fields/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setField(data);
-        setBookingForm((prev) => ({
-          ...prev,
-          startHour: String(data.startHour),
-          endHour: String(Math.min(data.startHour + 2, data.endHour > data.startHour ? data.endHour : 24)),
-        }));
-      }
-      setLoading(false);
-    })();
-  }, [params]);
+  const fetchField = useCallback(
+    async (signal: AbortSignal) => {
+      const id = (await params).id as string;
+      const res = await fetch(`/api/fields/${id}`, { signal });
+      if (!res.ok) throw new Error("Campo nao encontrado");
+      const data = await res.json();
+      setBookingForm((prev) => ({
+        ...prev,
+        startHour: String(data.startHour),
+        endHour: String(Math.min(data.startHour + 2, data.endHour > data.startHour ? data.endHour : 24)),
+      }));
+      return data as FieldData;
+    },
+    [params],
+  );
+
+  const { data: field, loading, error, retry } = useAsync<FieldData>(fetchField);
 
   async function handleGenerateLink(e: React.FormEvent) {
     e.preventDefault(); if (!field) return;
@@ -53,10 +57,21 @@ export default function DetalhesCampo() {
     setGeneratingLink(false);
   }
 
-  async function toggleActive() {
+  async function handleToggleConfirm() {
+    setShowConfirmToggle(true);
+  }
+
+  async function handleToggleActive() {
     if (!field) return;
-    await fetch(`/api/fields/${field.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active: !field.active }) });
-    setField((prev) => prev ? { ...prev, active: !prev.active } : null);
+    setToggling(true);
+    await fetch(`/api/fields/${field.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active: !field.active }),
+    });
+    setToggling(false);
+    setShowConfirmToggle(false);
+    retry();
   }
 
   if (loading) {
@@ -64,8 +79,15 @@ export default function DetalhesCampo() {
       <div className="flex items-center justify-center py-20">
         <div className="relative">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
-          <div className="absolute inset-0 flex items-center justify-center"><div className="h-4 w-4 rounded-full bg-primary" /></div>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16">
+        <ErrorMessage message={error} onRetry={retry} />
       </div>
     );
   }
@@ -73,7 +95,7 @@ export default function DetalhesCampo() {
   if (!field) {
     return (
       <div className="flex flex-col items-center gap-4 py-16">
-        <p className="text-text-3">Campo não encontrado.</p>
+        <p className="text-text-3">Campo nao encontrado.</p>
         <Link href="/owner/dashboard" className="btn-primary">Voltar</Link>
       </div>
     );
@@ -85,11 +107,24 @@ export default function DetalhesCampo() {
   };
   const statusLabel: Record<string, string> = {
     PENDING: "Pendente", CONFIRMED: "Confirmado", CANCELLED: "Cancelado",
-    COMPLETED: "Concluído", REFUNDED: "Reembolsado",
+    COMPLETED: "Concluido", REFUNDED: "Reembolsado",
   };
 
   return (
     <div className="space-y-5 stagger">
+      <ConfirmDialog
+        open={showConfirmToggle}
+        title={field.active ? "Desativar Campo" : "Ativar Campo"}
+        message={field.active
+          ? "Ao desativar, o campo nao recebera novas reservas. As reservas existentes nao serao afetadas. Deseja continuar?"
+          : "Ao ativar, o campo voltara a receber reservas."}
+        confirmLabel={field.active ? "Desativar" : "Ativar"}
+        danger={field.active}
+        loading={toggling}
+        onConfirm={handleToggleActive}
+        onCancel={() => setShowConfirmToggle(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link href="/owner/dashboard" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors">
@@ -110,10 +145,10 @@ export default function DetalhesCampo() {
       {/* Info Grid */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: "Preço", value: `R$ ${field.pricePerHour}/h`, icon: DollarIcon, color: "text-primary" },
-          { label: "Horário", value: `${field.startHour}h às ${field.endHour}h`, icon: ClockIcon2, color: "text-accent" },
+          { label: "Preco", value: `R$ ${field.pricePerHour}/h`, icon: DollarIcon, color: "text-primary" },
+          { label: "Horario", value: `${field.startHour}h as ${field.endHour}h`, icon: ClockIcon2, color: "text-accent" },
           { label: "Capacidade", value: `${field.capacity} jogadores`, icon: UsersIcon2, color: "text-secondary" },
-          { label: "Endereço", value: field.address, icon: MapPinIcon, color: "text-primary" },
+          { label: "Endereco", value: field.address, icon: MapPinIcon, color: "text-primary" },
         ].map((info) => (
           <div key={info.label} className="card p-3.5">
             <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-current/5 ${info.color}`}><info.icon /></div>
@@ -125,7 +160,7 @@ export default function DetalhesCampo() {
 
       {/* Toggle Active & Edit */}
       <div className="flex gap-3">
-        <button onClick={toggleActive}
+        <button onClick={handleToggleConfirm}
           className={`flex-1 rounded-xl py-3 text-sm font-medium transition-all duration-300 ${
             field.active ? "btn-secondary text-text-3" : "btn-primary"
           }`}>
@@ -143,11 +178,11 @@ export default function DetalhesCampo() {
         <form onSubmit={handleGenerateLink} className="space-y-3">
           <div className="space-y-1">
             <label className="text-xs font-medium text-text-3" htmlFor="date">Data</label>
-            <input id="date" type="date" value={bookingForm.date} onChange={(e) => setBookingForm((p) => ({ ...p, date: e.target.value }))} className="input-base" required />
+            <input id="date" type="date" min={new Date().toISOString().split("T")[0]} value={bookingForm.date} onChange={(e) => setBookingForm((p) => ({ ...p, date: e.target.value }))} className="input-base" required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-text-3">Início</label>
+              <label className="text-xs font-medium text-text-3">Inicio</label>
               <select value={bookingForm.startHour} onChange={(e) => setBookingForm((p) => ({ ...p, startHour: e.target.value }))} className="input-base">
                 {Array.from({ length: 24 }, (_, i) => (<option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>))}
               </select>
@@ -168,7 +203,7 @@ export default function DetalhesCampo() {
               </div>
               <p className="text-xs text-text-3 break-all bg-surface-2 rounded-lg p-2.5 select-all">{linkResult.link}</p>
               <button onClick={() => navigator.clipboard.writeText(linkResult.link)}
-                className="text-xs font-medium text-primary hover:underline">Copiar link</button>
+                type="button" className="text-xs font-medium text-primary hover:underline">Copiar link</button>
             </div>
           )}
 
@@ -180,7 +215,7 @@ export default function DetalhesCampo() {
 
       {/* Recent Bookings */}
       <div>
-        <h3 className="text-sm font-semibold text-text-2 tracking-wide uppercase mb-3">Últimas Reservas</h3>
+        <h3 className="text-sm font-semibold text-text-2 tracking-wide uppercase mb-3">Ultimas Reservas</h3>
         {field.bookings.length === 0 ? (
           <div className="card p-5 text-center">
             <p className="text-sm text-text-3">Nenhuma reserva ainda.</p>

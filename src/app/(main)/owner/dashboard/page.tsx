@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAsync } from "@/lib/use-async";
+import { ErrorMessage } from "@/components/error-message";
 
 interface OwnerField {
   id: string;
@@ -24,19 +25,27 @@ interface OwnerBooking {
 }
 
 export default function OwnerDashboard() {
-  const [fields, setFields] = useState<OwnerField[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: fields, loading, error, retry } = useAsync<OwnerField[]>(
+    async (signal) => {
+      const res = await fetch("/api/fields", { signal });
+      if (!res.ok) throw new Error("Erro ao carregar campos");
+      return res.json();
+    },
+  );
 
-  useEffect(() => {
-    fetch("/api/fields").then((r) => r.json()).then((d) => {
-      const list: OwnerField[] = Array.isArray(d) ? d : [];
-      setFields(list);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+  const list = Array.isArray(fields) ? fields : [];
 
-  const confirmedBookings = fields.reduce((acc, f) => acc + (f.bookings?.filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED").length || 0), 0);
-  const totalRevenue = fields.reduce((acc, f) => acc + (f.bookings?.reduce((s, b) => s + Number(b.paidValue || 0), 0) || 0), 0);
+  const confirmedBookings = list.reduce(
+    (acc: number, f: OwnerField) =>
+      acc +
+      (f.bookings?.filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED").length || 0),
+    0,
+  );
+  const totalRevenue = list.reduce(
+    (acc: number, f: OwnerField) =>
+      acc + (f.bookings?.reduce((s: number, b: OwnerBooking) => s + Number(b.paidValue || 0), 0) || 0),
+    0,
+  );
 
   if (loading) {
     return (
@@ -44,6 +53,10 @@ export default function OwnerDashboard() {
         <div className="relative"><div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" /></div>
       </div>
     );
+  }
+
+  if (error) {
+    return <ErrorMessage message={error} onRetry={retry} />;
   }
 
   return (
@@ -55,7 +68,7 @@ export default function OwnerDashboard() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="card p-3.5 text-center">
-          <p className="text-lg font-bold text-primary">{fields.length}</p>
+          <p className="text-lg font-bold text-primary">{list.length}</p>
           <p className="text-xs text-text-3">Campos</p>
         </div>
         <div className="card p-3.5 text-center">
@@ -72,14 +85,14 @@ export default function OwnerDashboard() {
         <p><span className="font-medium">Taxa MatchDay:</span> 5% por reserva</p>
       </div>
 
-      {fields.length === 0 ? (
+      {list.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-12">
           <p className="text-sm text-text-3">Nenhum campo cadastrado.</p>
           <Link href="/owner/cadastro" className="btn-primary text-sm">Cadastrar Campo</Link>
         </div>
       ) : (
         <div className="space-y-3">
-          {fields.map((f) => (
+          {list.map((f) => (
             <Link key={f.id} href={`/owner/campos/${f.id}`} className="card block p-4 hover:border-primary/30 transition-colors">
               <div className="flex items-center justify-between">
                 <div>

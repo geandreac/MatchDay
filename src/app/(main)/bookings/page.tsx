@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAsync } from "@/lib/use-async";
+import { ErrorMessage } from "@/components/error-message";
 
 interface BookingItem {
   id: string; shareLinkId: string; date: string; startHour: number; endHour: number;
@@ -11,34 +12,39 @@ interface BookingItem {
 }
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState<BookingItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: bookings, loading, error, retry } = useAsync<BookingItem[]>(
+    async     (signal) => {
+      const res = await fetch("/api/bookings", { signal });
+      if (!res.ok) throw new Error("Erro ao carregar agendamentos");
+      return res.json();
+    },
+  );
 
-  useEffect(() => {
-    fetch("/api/bookings").then((r) => r.json()).then((d) => { setBookings(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+  const list = Array.isArray(bookings) ? bookings : [];
 
   const statusConfig: Record<string, { label: string; badge: string }> = {
     PENDING: { label: "Pendente", badge: "badge badge-yellow" },
     CONFIRMED: { label: "Confirmado", badge: "badge badge-green" },
     CANCELLED: { label: "Cancelado", badge: "badge badge-red" },
-    COMPLETED: { label: "Concluído", badge: "badge badge-blue" },
+    COMPLETED: { label: "Concluido", badge: "badge badge-blue" },
     REFUNDED: { label: "Reembolsado", badge: "badge badge-text-3" },
   };
 
-  const activeBookings = bookings.filter((b) => b.status === "PENDING" || b.status === "CONFIRMED");
-  const pastBookings = bookings.filter((b) => b.status === "COMPLETED" || b.status === "CANCELLED" || b.status === "REFUNDED");
+  const activeBookings = list.filter((b) => b.status === "PENDING" || b.status === "CONFIRMED");
+  const pastBookings = list.filter((b) => b.status === "COMPLETED" || b.status === "CANCELLED" || b.status === "REFUNDED");
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-text-2 tracking-wide uppercase">Meus Agendamentos</h2>
-        {bookings.length > 0 && <span className="text-xs text-text-3">{bookings.length} reserva{bookings.length !== 1 ? "s" : ""}</span>}
+        {list.length > 0 && <span className="text-xs text-text-3">{list.length} reserva{list.length !== 1 ? "s" : ""}</span>}
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12"><div className="relative"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" /></div></div>
-      ) : bookings.length === 0 ? (
+      ) : error ? (
+        <ErrorMessage message={error} onRetry={retry} />
+      ) : list.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-12">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
@@ -49,13 +55,13 @@ export default function BookingsPage() {
         <>
           {activeBookings.length > 0 && (
             <div className="space-y-3">
-              <p className="text-xs font-medium text-text-3">PRÓXIMOS</p>
+              <p className="text-xs font-medium text-text-3">PROXIMOS</p>
               {activeBookings.map((b) => (
                 <Link key={b.id} href={`/reservar/${b.shareLinkId}`} className="card p-4 block hover:border-primary/40 transition-all">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-semibold text-text">{b.field.name}</p>
-                      <p className="text-xs text-text-3 mt-1">{new Date(b.date).toLocaleDateString("pt-BR")} • {String(b.startHour).padStart(2, "0")}h</p>
+                      <p className="text-xs text-text-3 mt-1">{new Date(b.date).toLocaleDateString("pt-BR")} &bull; {String(b.startHour).padStart(2, "0")}h</p>
                       <p className="text-xs text-text-3">{b.participants.length} participante{b.participants.length !== 1 ? "s" : ""}</p>
                     </div>
                     <div className="text-right space-y-1">
@@ -66,7 +72,7 @@ export default function BookingsPage() {
                   {b.status === "PENDING" && (
                     <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
                       <span className="text-xs text-text-3">R$ {Number(b.paidValue).toFixed(2)} de R$ {Number(b.totalValue).toFixed(2)}</span>
-                      <span className="text-xs font-medium text-primary">Pagar →</span>
+                      <span className="text-xs font-medium text-primary">Pagar &rarr;</span>
                     </div>
                   )}
                 </Link>
@@ -95,4 +101,3 @@ export default function BookingsPage() {
     </div>
   );
 }
-
