@@ -4,8 +4,10 @@ import { auth } from "@/lib/auth";
 export default async function RootPage() {
   const session = await auth();
   if (session?.user) {
+    if (session.user.role === "FIELD_OWNER") {
+      redirect("/owner/dashboard");
+    }
     redirect("/home");
   }
   redirect("/login");
 }
-
