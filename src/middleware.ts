@@ -1,17 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createRateLimiter } from "@/lib/rate-limit";
-import crypto from "crypto";
-
-const sensitiveEndpoints = [
-  "/api/auth",
-  "/api/register",
-  "/api/pix/criar",
-  "/api/pix/verificar",
-];
-
-const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10 });
-const apiLimiter = createRateLimiter({ windowMs: 60 * 1000, max: 30 });
 
 const CSRF_COOKIE = "csrf-token";
 const CSRF_HEADER = "x-csrf-token";
@@ -35,40 +23,23 @@ const CSRF_PROTECTED = [
 const CSRF_EXEMPT = new Set(["/api/pix/webhook"]);
 
 function generateToken(): string {
-  return crypto.randomBytes(32).toString("hex");
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function safeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
 }
 
 export async function middleware(request: NextRequest) {
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "127.0.0.1";
-
   const pathname = request.nextUrl.pathname;
   const method = request.method;
-
-  if (sensitiveEndpoints.some((ep) => pathname.startsWith(ep))) {
-    const { allowed } = await loginLimiter.check(ip);
-    if (!allowed) {
-      return NextResponse.json(
-        { error: "Muitas requisicoes. Tente novamente mais tarde." },
-        { status: 429 },
-      );
-    }
-  } else if (pathname.startsWith("/api/")) {
-    const { allowed } = await apiLimiter.check(ip);
-    if (!allowed) {
-      return NextResponse.json(
-        { error: "Muitas requisicoes. Tente novamente mais tarde." },
-        { status: 429 },
-      );
-    }
-  }
 
   const response = NextResponse.next();
 
@@ -79,14 +50,10 @@ export async function middleware(request: NextRequest) {
       const host = request.headers.get("host") ?? "";
       const isSameOrigin = origin.includes(host);
 
-      const hasCSRFToken =
-        request.cookies.get(CSRF_COOKIE)?.value &&
-        request.headers.get(CSRF_HEADER);
-
       const cookieToken = request.cookies.get(CSRF_COOKIE)?.value;
       const headerToken = request.headers.get(CSRF_HEADER);
 
-      if (hasCSRFToken && cookieToken && headerToken) {
+      if (cookieToken && headerToken) {
         if (!safeCompare(cookieToken, headerToken)) {
           return NextResponse.json(
             { error: "Token CSRF invalido." },
