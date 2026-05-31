@@ -41,20 +41,20 @@ export function Header() {
   const backHref = getBackRoute(pathname);
 
   return (
-    <header className="sticky top-0 z-40 glass border-b border-border/50">
+    <header className="sticky top-0 z-40 glass border-b border-border/50" role="banner">
       <div className="mx-auto flex max-w-lg items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3">
-          {isSubpage && (
-            <Link
-              href={backHref}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 hover:text-primary transition-all duration-200 text-text-2"
-              aria-label="Voltar"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </Link>
-          )}
+            {isSubpage && (
+              <Link
+                href={backHref}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 hover:text-primary transition-all duration-200 text-text-2"
+                aria-label="Voltar"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </Link>
+            )}
           <div>
             <p className="text-xs font-medium tracking-wider uppercase text-text-3">{hoje}</p>
             <h1 className="mt-0.5 text-lg font-bold text-text">

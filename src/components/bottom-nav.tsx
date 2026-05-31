@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/home", label: "Início", icon: HomeIcon, activeIcon: HomeActiveIcon },
+  { href: "/home", label: "Inicio", icon: HomeIcon, activeIcon: HomeActiveIcon },
   { href: "/search", label: "Buscar", icon: SearchIcon, activeIcon: SearchActiveIcon },
   { href: "/bookings", label: "Agenda", icon: CalendarIcon, activeIcon: CalendarActiveIcon },
   { href: "/menu", label: "Menu", icon: MenuIcon, activeIcon: MenuActiveIcon },
@@ -14,7 +14,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 z-50" aria-label="Navegação principal">
       <div className="mx-auto max-w-lg px-4 pb-4">
         <div className="rounded-2xl px-2 py-1.5" style={{ background: "rgba(17, 17, 24, 0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: "1px solid rgba(34, 34, 51, 0.6)" }}>
           <div className="flex items-center justify-around">
@@ -24,11 +24,13 @@ export function BottomNav() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-label={item.label}
+                  aria-current={isActive ? "page" : undefined}
                   className={`group relative flex flex-col items-center gap-0.5 py-2 px-5 transition-all duration-300 ${
                     isActive ? "scale-105" : ""
                   }`}
                 >
-                  {isActive ? <item.activeIcon /> : <item.icon />}
+                  <span aria-hidden="true">{isActive ? <item.activeIcon /> : <item.icon />}</span>
                   <span
                     className={`text-[10px] font-semibold tracking-wider transition-all duration-300 ${
                       isActive ? "text-primary" : "text-text-3 group-hover:text-text-2"

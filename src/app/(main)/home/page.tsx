@@ -36,25 +36,25 @@ export default function HomePage() {
   return (
     <div className="space-y-5">
       {/* Search */}
-      <Link href="/search" className="relative group block">
-        <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-text-3 group-hover:text-primary transition-colors" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-        <div className="input-base text-text-3 cursor-text" style={{ paddingLeft: "44px" }}>Buscar campo...</div>
+      <Link href="/search" className="relative group block" aria-label="Buscar campos de futebol">
+        <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-text-3 group-hover:text-primary transition-colors" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+        <div className="input-base text-text-3" style={{ paddingLeft: "44px" }}>Buscar campo...</div>
       </Link>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <dl className="grid grid-cols-3 gap-3">
         {[
           { label: "Campos", value: String(stats.campos), icon: MapIcon, color: "text-primary" },
           { label: "Partidas", value: String(stats.partidas || (lastBooking ? "1" : "0")), icon: BallIcon, color: "text-secondary" },
           { label: "Favoritos", value: String(favoriteField ? "1" : "0"), icon: HeartSmIcon, color: "text-danger" },
         ].map((stat) => (
           <div key={stat.label} className="card p-3.5 text-center">
-            <div className={`mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-current/5 ${stat.color}`}><stat.icon /></div>
-            <p className="text-lg font-bold text-text">{stat.value}</p>
-            <p className="text-xs text-text-3">{stat.label}</p>
+            <dt className={`mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-current/5 ${stat.color}`}><stat.icon /></dt>
+            <dd className="text-lg font-bold text-text">{stat.value}</dd>
+            <dd className="text-xs text-text-3">{stat.label}</dd>
           </div>
         ))}
-      </div>
+      </dl>
 
       {/* Last Booking */}
       <section>
