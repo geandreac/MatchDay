@@ -202,8 +202,19 @@ export default function DetalhesCampo() {
                 <p className="text-sm font-medium text-primary">Link gerado com sucesso!</p>
               </div>
               <p className="text-xs text-text-3 break-all bg-surface-2 rounded-lg p-2.5 select-all">{linkResult.link}</p>
-              <button onClick={() => navigator.clipboard.writeText(linkResult.link)}
-                type="button" className="text-xs font-medium text-primary hover:underline">Copiar link</button>
+              <div className="flex gap-2">
+                <button onClick={() => navigator.clipboard.writeText(linkResult.link)}
+                  type="button" className="text-xs font-medium text-primary hover:underline">Copiar link</button>
+                <span className="text-text-3 text-xs">&bull;</span>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`Jogue comigo! Reserve seu lugar: ${linkResult.link}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-medium text-green-400 hover:underline"
+                >
+                  Compartilhar no WhatsApp
+                </a>
+              </div>
             </div>
           )}
 
