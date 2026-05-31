@@ -195,7 +195,7 @@ export default function SearchPage() {
         <div className="flex flex-col items-center gap-4 py-12">
           {activeFilter === "nearby" && userPos ? (
             <>
-              <p className="text-sm text-text-3">Nenhum campo encontrado em ate 5 km.</p>
+              <p className="text-sm text-text-3">Nenhum campo encontrado.</p>
               <p className="text-xs text-text-3/60">Tente ampliar a busca por nome ou cidade.</p>
             </>
           ) : (

@@ -55,13 +55,17 @@ export async function GET(request: Request) {
     const userLng = parseFloat(lng);
 
     result = result
-      .filter((f) => f.latitude != null && f.longitude != null)
       .map((f) => {
-        const dist = calcularDistancia(userLat, userLng, f.latitude!, f.longitude!);
+        if (f.latitude == null || f.longitude == null) return f;
+        const dist = calcularDistancia(userLat, userLng, f.latitude, f.longitude);
         return { ...f, distanciaKm: Math.round(dist * 10) / 10 };
       })
-      .filter((f) => (f.distanciaKm ?? Infinity) <= 5)
-      .sort((a, b) => (a.distanciaKm ?? Infinity) - (b.distanciaKm ?? Infinity));
+      .sort((a, b) => {
+        if (a.distanciaKm == null && b.distanciaKm == null) return 0;
+        if (a.distanciaKm == null) return 1;
+        if (b.distanciaKm == null) return -1;
+        return a.distanciaKm - b.distanciaKm;
+      });
   }
 
   return NextResponse.json({
