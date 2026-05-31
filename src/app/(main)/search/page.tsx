@@ -20,6 +20,11 @@ export default function SearchPage() {
   const [posError, setPosError] = useState(false);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [geoLoading, setGeoLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const geoLoadedRef = useRef(false);
 
   const fetchFields = useCallback(async (
     query: string,
@@ -59,8 +64,6 @@ export default function SearchPage() {
     setLoading(false);
     setLoadingMore(false);
   }, []);
-
-  const geoLoadedRef = useRef(false);
 
   useEffect(() => {
     if (geoLoadedRef.current) return;
