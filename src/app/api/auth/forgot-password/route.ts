@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimitIP } from "@/lib/rate-limit";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
+  const rl = await checkRateLimitIP(request, 15 * 60 * 1000, 5);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { message: "Se o email existir, um link de recuperacao foi enviado." },
+      { status: 200 },
+    );
+  }
   try {
     const { email } = await request.json();
 

@@ -168,21 +168,64 @@ export default function CampoDetalhes() {
 
         {/* Location */}
         <div className="card p-4">
-          <h3 className="text-xs font-semibold text-text-2 tracking-wide uppercase mb-2">Localização</h3>
-          <p className="text-sm text-text">{campo.address}</p>
-          <p className="text-xs text-text-3 mt-0.5">{campo.city}{campo.state ? `, ${campo.state}` : ""}</p>
-          {campo.latitude && campo.longitude && (
+          <h3 className="text-xs font-semibold text-text-2 tracking-wide uppercase mb-2">Localizacao</h3>
+          <div className="flex items-start gap-3">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${campo.latitude && campo.longitude ? "bg-primary/10 border border-primary/20" : "bg-surface-2 border border-border"}`}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                className={campo.latitude && campo.longitude ? "text-primary" : "text-text-3"}
+                aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-text">{campo.address}</p>
+              <p className="text-xs text-text-3 mt-0.5">{campo.city}{campo.state ? `, ${campo.state}` : ""}</p>
+            </div>
+          </div>
+          {campo.latitude && campo.longitude ? (
             <div className="flex gap-2 mt-3">
-              <a href={`https://www.google.com/maps/dir/?api=1&destination=${campo.latitude},${campo.longitude}`} target="_blank" rel="noopener noreferrer"
-                className="flex-1 btn-secondary text-xs text-center flex items-center justify-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${campo.latitude},${campo.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Abrir rota para ${campo.name} no Google Maps`}
+                title="Abrir no Google Maps"
+                className="flex-1 btn-secondary text-xs text-center flex items-center justify-center gap-1.5"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 Google Maps
               </a>
-              <a href={`https://waze.com/ul?ll=${campo.latitude},${campo.longitude}&navigate=yes`} target="_blank" rel="noopener noreferrer"
-                className="flex-1 btn-secondary text-xs text-center flex items-center justify-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <a
+                href={`https://waze.com/ul?ll=${campo.latitude},${campo.longitude}&navigate=yes`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Abrir rota para ${campo.name} no Waze`}
+                title="Abrir no Waze"
+                className="flex-1 btn-secondary text-xs text-center flex items-center justify-center gap-1.5"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 Waze
               </a>
+            </div>
+          ) : campo.address ? (
+            <div className="flex gap-2 mt-3">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${campo.address}, ${campo.city}${campo.state ? `, ${campo.state}` : ""}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Abrir rota para ${campo.name} no Google Maps (endereco)`}
+                title="Abrir no Google Maps pelo endereco"
+                className="flex-1 btn-secondary text-xs text-center flex items-center justify-center gap-1.5"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Google Maps
+              </a>
+            </div>
+          ) : (
+            <div className="mt-3 rounded-xl bg-surface-2 border border-border px-3 py-2 flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-3 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <p className="text-xs text-text-3">Localizacao nao disponivel para gerar rota.</p>
             </div>
           )}
         </div>

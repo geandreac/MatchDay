@@ -14,16 +14,19 @@ interface FieldResult {
 export default function SearchPage() {
   const [search, setSearch] = useState("");
   const [fields, setFields] = useState<FieldResult[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string>("nearby");
   const [posError, setPosError] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoLoading, setGeoLoading] = useState(true);
 
-  const fetchFields = useCallback(async (query: string, filter: string | null, pos: { lat: number; lng: number } | null, pageNum = 1) => {
+  const fetchFields = useCallback(async (
+    query: string,
+    filter: string | null,
+    pos: { lat: number; lng: number } | null,
+    pageNum = 1,
+  ) => {
     const isLoadMore = pageNum > 1;
     if (isLoadMore) setLoadingMore(true); else setLoading(true);
     setError(null);
@@ -57,25 +60,59 @@ export default function SearchPage() {
     setLoadingMore(false);
   }, []);
 
-  const retry = useCallback(() => {
-    fetchFields(search, activeFilter, null);
-  }, [search, activeFilter, fetchFields]);
+  const geoLoadedRef = useRef(false);
 
   useEffect(() => {
+    if (geoLoadedRef.current) return;
+    geoLoadedRef.current = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPos(p);
+        setPosError(false);
+        setActiveFilter("nearby");
+        setGeoLoading(false);
+        fetchFields("", "nearby", p);
+      },
+      () => {
+        setPosError(true);
+        setUserPos(null);
+        setActiveFilter("name");
+        setGeoLoading(false);
+        fetchFields("", null, null);
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const retryGeo = useCallback(() => {
+    setPosError(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserPos(p);
+        setPosError(false);
+        setActiveFilter("nearby");
+        setGeoLoading(false);
+        fetchFields("", "nearby", p);
+      },
+      () => {
+        setPosError(true);
+        setGeoLoading(false);
+      },
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
+  }, [fetchFields]);
+
+  useEffect(() => {
+    if (geoLoading) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (activeFilter === "nearby") {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          fetchFields(search, activeFilter, p);
-        },
-        () => {
-          setPosError(true);
-          fetchFields(search, activeFilter, null);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+      if (userPos) {
+        debounceRef.current = setTimeout(() => fetchFields(search, "nearby", userPos), 300);
+      }
     } else {
       debounceRef.current = setTimeout(() => fetchFields(search, activeFilter, null), 300);
     }
@@ -83,12 +120,20 @@ export default function SearchPage() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search, activeFilter, fetchFields]);
+  }, [search, activeFilter, userPos, geoLoading, fetchFields]);
+
+  function handleFilterToggle(filterId: string) {
+    if (filterId === "nearby" && !userPos) {
+      retryGeo();
+      return;
+    }
+    setActiveFilter((prev) => (prev === filterId ? "name" : filterId));
+  }
 
   const filters = [
+    { id: "nearby", label: "Mais proximos" },
     { id: "name", label: "Nome" },
     { id: "city", label: "Cidade" },
-    { id: "nearby", label: "Proximo" },
   ];
 
   return (
@@ -109,7 +154,7 @@ export default function SearchPage() {
         {filters.map((f) => (
           <button
             key={f.id}
-            onClick={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
+            onClick={() => handleFilterToggle(f.id)}
             className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${activeFilter === f.id ? "bg-primary text-white" : "bg-surface-2 text-text-2 hover:bg-surface-2/70"}`}
           >
             {f.label}
@@ -118,29 +163,50 @@ export default function SearchPage() {
       </div>
 
       {posError && (
-        <p className="text-sm text-danger">Nao foi possivel obter sua localizacao.</p>
+        <div className="glass rounded-xl px-4 py-3 text-sm border border-secondary/20 animate-fade-in">
+          <div className="flex items-start gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-secondary shrink-0 mt-0.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <p className="text-text-2">Localizacao nao disponivel.</p>
+              <p className="text-xs text-text-3 mt-0.5">Permita o acesso a localizacao para ver campos proximos, ou use os filtros Nome/Cidade.</p>
+              <button onClick={retryGeo} disabled={geoLoading} className="mt-2 text-xs font-medium text-primary hover:underline">
+                {geoLoading ? "Tentando..." : "Tentar novamente"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
-      {loading ? (
+      {loading && geoLoading ? (
+        <div className="flex flex-col items-center gap-4 py-12">
+          <div className="relative"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" /></div>
+          <p className="text-sm text-text-3">Obtendo localizacao...</p>
+        </div>
+      ) : loading ? (
         <div className="flex justify-center py-12">
           <div className="relative"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" /></div>
         </div>
       ) : error ? (
-        <ErrorMessage message={error} onRetry={retry} />
-      ) : !search && !activeFilter ? (
-        <div className="flex flex-col items-center gap-4 py-12">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 border border-border">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-3"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          </div>
-          <p className="text-sm text-text-3">Busque por nome, cidade ou use o filtro Proximo.</p>
-        </div>
+        <ErrorMessage message={error} onRetry={() => fetchFields(search, activeFilter, userPos)} />
       ) : fields.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-12">
-          <p className="text-sm text-text-3">Nenhum campo encontrado.</p>
-          <p className="text-xs text-text-3/60">Tente buscar por outro termo ou cidade.</p>
+          {activeFilter === "nearby" && userPos ? (
+            <>
+              <p className="text-sm text-text-3">Nenhum campo encontrado em ate 5 km.</p>
+              <p className="text-xs text-text-3/60">Tente ampliar a busca por nome ou cidade.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-text-3">Nenhum campo encontrado.</p>
+              <p className="text-xs text-text-3/60">Tente buscar por outro termo ou cidade.</p>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
+          {activeFilter === "nearby" && userPos && (
+            <p className="text-xs text-text-3">Ordenado por proximidade &bull; {fields.length} campo{fields.length !== 1 ? "s" : ""}</p>
+          )}
           {fields.map((f) => (
             <Link key={f.id} href={`/campo/${f.id}`} className="card block p-4 hover:border-primary/30 transition-colors">
               <div className="flex items-center justify-between">
@@ -160,7 +226,7 @@ export default function SearchPage() {
           {hasMore && (
             <div className="flex justify-center pt-2">
               <button
-                onClick={() => fetchFields(search, activeFilter, null, page + 1)}
+                onClick={() => fetchFields(search, activeFilter, userPos, page + 1)}
                 disabled={loadingMore}
                 className="btn-secondary text-sm"
               >
