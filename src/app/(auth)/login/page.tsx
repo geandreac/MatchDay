@@ -93,9 +93,15 @@ export default function LoginPage() {
       </form>
 
       <p className="mt-8 text-center text-sm text-text-3">
-        Não tem conta?{" "}
+        Nao tem conta?{" "}
         <Link href="/register" className="font-semibold text-primary hover:text-primary-dark transition-colors">
           Cadastre-se
+        </Link>
+      </p>
+
+      <p className="mt-3 text-center text-sm">
+        <Link href="/forgot-password" className="text-text-3 hover:text-primary transition-colors">
+          Esqueci minha senha
         </Link>
       </p>
     </div>

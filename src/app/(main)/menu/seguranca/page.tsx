@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { csrfFetch } from "@/lib/csrf-client";
 
 export default function Seguranca() {
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -17,7 +18,7 @@ export default function Seguranca() {
       setMessage({ text: "A senha deve ter pelo menos 8 caracteres.", ok: false }); setSaving(false); return;
     }
 
-    const res = await fetch("/api/user", {
+    const res = await csrfFetch("/api/user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ currentPassword: form.currentPassword, newPassword: form.newPassword }),

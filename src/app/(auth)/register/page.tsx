@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { validarCPF } from "@/lib/validations";
+import { csrfFetch } from "@/lib/csrf-client";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/register", {
+      const res = await csrfFetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
