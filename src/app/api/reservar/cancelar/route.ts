@@ -27,8 +27,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Reserva não encontrada." }, { status: 404 });
     }
 
-    console.log(`Cancel attempt: bookingId=${bookingId}, status=${booking.status}, userId=${userId}, ownerId=${booking.userId}`);
-
     if (booking.status !== "PENDING") {
       return NextResponse.json({ error: `Reserva não pode ser cancelada. Status atual: ${booking.status}.` }, { status: 400 });
     }
