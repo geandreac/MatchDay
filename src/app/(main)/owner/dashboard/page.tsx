@@ -81,6 +81,18 @@ export default function OwnerDashboard() {
         </div>
       </div>
 
+      <div className="flex gap-3">
+        <Link href="/owner/bookings" className="card flex-1 p-4 flex items-center gap-3 hover:border-primary/30 transition-colors">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-secondary"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-text">Reservas</p>
+            <p className="text-xs text-text-3">Gerencie as reservas dos seus campos</p>
+          </div>
+        </Link>
+      </div>
+
       <div className="card p-4 text-sm text-text-2">
         <p><span className="font-medium">Taxa MatchDay:</span> 5% por reserva</p>
       </div>
