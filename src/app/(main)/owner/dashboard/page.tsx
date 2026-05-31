@@ -91,6 +91,15 @@ export default function OwnerDashboard() {
             <p className="text-xs text-text-3">Gerencie as reservas dos seus campos</p>
           </div>
         </Link>
+        <Link href="/owner/dashboard/financeiro" className="card flex-1 p-4 flex items-center gap-3 hover:border-primary/30 transition-colors">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-accent"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-text">Financeiro</p>
+            <p className="text-xs text-text-3">KPIs, receita e ocupacao</p>
+          </div>
+        </Link>
       </div>
 
       <div className="card p-4 text-sm text-text-2">
