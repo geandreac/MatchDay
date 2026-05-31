@@ -15,6 +15,9 @@ export async function GET(request: Request) {
   const city = searchParams.get("city") ?? "";
   const lat = searchParams.get("lat");
   const lng = searchParams.get("lng");
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
+  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") ?? "20")));
+  const skip = (page - 1) * limit;
 
   const where: Prisma.FieldWhereInput = { active: true };
 
@@ -29,16 +32,21 @@ export async function GET(request: Request) {
     where.city = { contains: city };
   }
 
-  const fields = await prisma.field.findMany({
-    where,
-    select: {
-      id: true, name: true, city: true, address: true,
-      pricePerHour: true, startHour: true, endHour: true,
-      capacity: true, latitude: true, longitude: true,
-      owner: { select: { name: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const [fields, total] = await Promise.all([
+    prisma.field.findMany({
+      where,
+      select: {
+        id: true, name: true, city: true, address: true,
+        pricePerHour: true, startHour: true, endHour: true,
+        capacity: true, latitude: true, longitude: true,
+        owner: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.field.count({ where }),
+  ]);
 
   let result: FieldWithDistance[] = fields.map((f) => ({ ...f, distanciaKm: undefined }));
 
@@ -56,7 +64,15 @@ export async function GET(request: Request) {
       .sort((a, b) => (a.distanciaKm ?? Infinity) - (b.distanciaKm ?? Infinity));
   }
 
-  return NextResponse.json(result);
+  return NextResponse.json({
+    fields: result,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 }
 
 function calcularDistancia(lat1: number, lng1: number, lat2: number, lng2: number): number {

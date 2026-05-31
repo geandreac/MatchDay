@@ -18,10 +18,14 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [posError, setPosError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchFields = useCallback(async (query: string, filter: string | null, pos: { lat: number; lng: number } | null) => {
-    setLoading(true);
+  const fetchFields = useCallback(async (query: string, filter: string | null, pos: { lat: number; lng: number } | null, pageNum = 1) => {
+    const isLoadMore = pageNum > 1;
+    if (isLoadMore) setLoadingMore(true); else setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
@@ -31,16 +35,26 @@ export default function SearchPage() {
         params.set("lat", String(pos.lat));
         params.set("lng", String(pos.lng));
       }
+      params.set("page", String(pageNum));
 
       const res = await fetch(`/api/fields/search?${params}`);
       if (!res.ok) throw new Error("Erro ao buscar campos");
       const data = await res.json();
-      setFields(Array.isArray(data) ? data : []);
+      const newFields = Array.isArray(data.fields) ? data.fields : [];
+      const pag = data.pagination ?? {};
+      if (isLoadMore) {
+        setFields((prev) => [...prev, ...newFields]);
+      } else {
+        setFields(newFields);
+      }
+      setPage(pageNum);
+      setHasMore((pag.page ?? 1) < (pag.totalPages ?? 1));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao buscar campos");
-      setFields([]);
+      if (!isLoadMore) setFields([]);
     }
     setLoading(false);
+    setLoadingMore(false);
   }, []);
 
   const retry = useCallback(() => {
@@ -143,6 +157,17 @@ export default function SearchPage() {
               </div>
             </Link>
           ))}
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => fetchFields(search, activeFilter, null, page + 1)}
+                disabled={loadingMore}
+                className="btn-secondary text-sm"
+              >
+                {loadingMore ? "Carregando..." : "Carregar mais campos"}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
