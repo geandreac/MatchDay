@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useAsync } from "@/lib/use-async";
+import { ErrorMessage } from "@/components/error-message";
 
 interface AdminReports {
   totalUsers: number;
@@ -28,29 +30,46 @@ interface AdminField {
 }
 
 export default function AdminPage() {
-  const [reports, setReports] = useState<AdminReports | null>(null);
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [fields, setFields] = useState<AdminField[]>([]);
   const [tab, setTab] = useState("reports");
 
-  useEffect(() => {
-    fetch("/api/admin/reports").then((r) => r.json()).then(setReports).catch(() => {});
-    fetch("/api/admin/users").then((r) => r.json()).then((d: AdminUser[]) => setUsers(Array.isArray(d) ? d : [])).catch(() => {});
-    fetch("/api/admin/fields-list").then((r) => r.json()).then((d: AdminField[]) => setFields(Array.isArray(d) ? d : [])).catch(() => {});
-  }, []);
+  const { data: reports, loading: loadingRep, error: errorRep, retry: retryRep } = useAsync<AdminReports>(
+    async (signal) => {
+      const res = await fetch("/api/admin/reports", { signal });
+      if (!res.ok) throw new Error("Acesso negado ou erro no servidor");
+      return res.json();
+    },
+  );
+
+  const { data: users, loading: loadingUsr, error: errorUsr, retry: retryUsr } = useAsync<AdminUser[]>(
+    async (signal) => {
+      const res = await fetch("/api/admin/users", { signal });
+      if (!res.ok) throw new Error("Acesso negado ou erro no servidor");
+      return res.json();
+    },
+  );
+
+  const { data: fields, loading: loadingFld, error: errorFld, retry: retryFld } = useAsync<AdminField[]>(
+    async (signal) => {
+      const res = await fetch("/api/admin/fields-list", { signal });
+      if (!res.ok) throw new Error("Acesso negado ou erro no servidor");
+      return res.json();
+    },
+  );
 
   const tabs = [
-    { id: "reports", label: "Relatórios" },
-    { id: "users", label: "Usuários" },
+    { id: "reports", label: "Relatorios" },
+    { id: "users", label: "Usuarios" },
     { id: "fields", label: "Campos" },
   ];
+
+  const userList = Array.isArray(users) ? users : [];
+  const fieldList = Array.isArray(fields) ? fields : [];
 
   return (
     <div className="mx-auto max-w-lg px-5 py-8 space-y-6">
       <Link href="/menu" className="text-sm text-primary hover:underline">&larr; Voltar</Link>
       <h1 className="text-2xl font-bold text-text">Admin</h1>
 
-      {/* Tabs */}
       <div className="flex gap-2 border-b border-border pb-2">
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
@@ -60,50 +79,74 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {/* Reports */}
-      {tab === "reports" && reports && (
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: "Usuários", value: reports.totalUsers, icon: "\u{1F465}" },
-            { label: "Campos", value: reports.totalFields, icon: "\u{1F3DF}\uFE0F" },
-            { label: "Reservas", value: reports.totalBookings, icon: "\u{1F4C5}" },
-            { label: "Receita", value: `R$ ${Number(reports.totalRevenue).toFixed(0)}`, icon: "\u{1F4B0}" },
-            { label: "Taxa MatchDay", value: `R$ ${Number(reports.platformFees).toFixed(0)}`, icon: "\u{1F4CA}" },
-          ].map((item) => (
-            <div key={item.label} className="card p-4">
-              <p className="text-2xl mb-1">{item.icon}</p>
-              <p className="text-lg font-bold text-text">{item.value}</p>
-              <p className="text-xs text-text-3">{item.label}</p>
+      {tab === "reports" && (
+        <>
+          {loadingRep ? (
+            <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" /></div>
+          ) : errorRep ? (
+            <ErrorMessage message={errorRep} onRetry={retryRep} />
+          ) : reports && (
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Usuarios", value: reports.totalUsers },
+                { label: "Campos", value: reports.totalFields },
+                { label: "Reservas", value: reports.totalBookings },
+                { label: "Receita", value: `R$ ${Number(reports.totalRevenue).toFixed(0)}` },
+                { label: "Taxa MatchDay", value: `R$ ${Number(reports.platformFees).toFixed(0)}` },
+              ].map((item) => (
+                <div key={item.label} className="card p-4">
+                  <p className="text-lg font-bold text-text">{item.value}</p>
+                  <p className="text-xs text-text-3">{item.label}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
-      {/* Users */}
       {tab === "users" && (
-        <div className="space-y-2">
-          {users.length === 0 ? <p className="text-text-3">Nenhum usuário.</p> : users.map((u) => (
-            <div key={u.id} className="card p-3 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-text">{u.name}</p>
-                <p className="text-xs text-text-3">{u.email}</p>
-              </div>
-              <span className={`badge ${u.role === "ADMIN" ? "badge-green" : u.role === "FIELD_OWNER" ? "badge-yellow" : "badge-blue"}`}>{u.role}</span>
+        <>
+          {loadingUsr ? (
+            <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" /></div>
+          ) : errorUsr ? (
+            <ErrorMessage message={errorUsr} onRetry={retryUsr} />
+          ) : userList.length === 0 ? (
+            <p className="text-text-3 text-center py-8">Nenhum usuario.</p>
+          ) : (
+            <div className="space-y-2">
+              {userList.map((u) => (
+                <div key={u.id} className="card p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-text">{u.name}</p>
+                    <p className="text-xs text-text-3">{u.email}</p>
+                  </div>
+                  <span className={`badge ${u.role === "ADMIN" ? "badge-green" : u.role === "FIELD_OWNER" ? "badge-yellow" : "badge-blue"}`}>{u.role}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
-      {/* Fields */}
       {tab === "fields" && (
-        <div className="space-y-2">
-          {fields.length === 0 ? <p className="text-text-3">Nenhum campo.</p> : fields.map((f) => (
-            <div key={f.id} className="card p-3">
-              <p className="text-sm font-medium text-text">{f.name}</p>
-              <p className="text-xs text-text-3">{f.city} &bull; Dono: {f.owner?.name} &bull; {f._count?.bookings} reservas</p>
+        <>
+          {loadingFld ? (
+            <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" /></div>
+          ) : errorFld ? (
+            <ErrorMessage message={errorFld} onRetry={retryFld} />
+          ) : fieldList.length === 0 ? (
+            <p className="text-text-3 text-center py-8">Nenhum campo.</p>
+          ) : (
+            <div className="space-y-2">
+              {fieldList.map((f) => (
+                <div key={f.id} className="card p-3">
+                  <p className="text-sm font-medium text-text">{f.name}</p>
+                  <p className="text-xs text-text-3">{f.city} &bull; Dono: {f.owner?.name} &bull; {f._count?.bookings} reservas</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );
