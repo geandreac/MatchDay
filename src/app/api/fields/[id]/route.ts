@@ -80,7 +80,29 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   }
 
   try {
+    const bookings = await prisma.booking.findMany({
+      where: { fieldId: id },
+      select: { id: true },
+    });
+    const bookingIds = bookings.map((b) => b.id);
+
+    if (bookingIds.length > 0) {
+      await prisma.transactionLedger.deleteMany({ where: { bookingId: { in: bookingIds } } });
+      await prisma.transactionLedger.deleteMany({ where: { fieldId: id } });
+      await prisma.credit.deleteMany({ where: { bookingId: { in: bookingIds } } });
+      await prisma.paymentContribution.deleteMany({ where: { bookingId: { in: bookingIds } } });
+      await prisma.payment.deleteMany({ where: { bookingId: { in: bookingIds } } });
+      await prisma.rating.deleteMany({ where: { bookingId: { in: bookingIds } } });
+      await prisma.participant.deleteMany({ where: { bookingId: { in: bookingIds } } });
+      await prisma.booking.deleteMany({ where: { fieldId: id } });
+    }
+
+    await prisma.favorite.deleteMany({ where: { fieldId: id } });
+    await prisma.fieldPhoto.deleteMany({ where: { fieldId: id } });
+    await prisma.fieldAvailableDay.deleteMany({ where: { fieldId: id } });
+    await prisma.transactionLedger.deleteMany({ where: { fieldId: id } });
     await prisma.field.delete({ where: { id } });
+
     return NextResponse.json({ message: "Campo excluido com sucesso." });
   } catch (error) {
     console.error("Delete field error:", error);
