@@ -63,3 +63,27 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Erro ao atualizar campo." }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Nao autorizado." }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const field = await prisma.field.findFirst({
+    where: { id, ownerId: session.user.id },
+  });
+
+  if (!field) {
+    return NextResponse.json({ error: "Campo nao encontrado." }, { status: 404 });
+  }
+
+  try {
+    await prisma.field.delete({ where: { id } });
+    return NextResponse.json({ message: "Campo excluido com sucesso." });
+  } catch (error) {
+    console.error("Delete field error:", error);
+    return NextResponse.json({ error: "Erro ao excluir campo." }, { status: 500 });
+  }
+}

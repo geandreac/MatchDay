@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAsync } from "@/lib/use-async";
 import { ErrorMessage } from "@/components/error-message";
@@ -16,11 +16,14 @@ interface FieldData {
 
 export default function DetalhesCampo() {
   const params = useParams();
+  const router = useRouter();
   const [generatingLink, setGeneratingLink] = useState(false);
   const [linkResult, setLinkResult] = useState<{ link: string; id: string } | null>(null);
   const [bookingForm, setBookingForm] = useState({ date: "", startHour: "19", endHour: "22" });
   const [showConfirmToggle, setShowConfirmToggle] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchField = useCallback(
     async (signal: AbortSignal) => {
@@ -74,6 +77,16 @@ export default function DetalhesCampo() {
     retry();
   }
 
+  async function handleDelete() {
+    if (!field) return;
+    setDeleting(true);
+    await fetch(`/api/fields/${field.id}`, { method: "DELETE" });
+    setDeleting(false);
+    setShowConfirmDelete(false);
+    router.push("/owner/dashboard");
+    router.refresh();
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -125,6 +138,17 @@ export default function DetalhesCampo() {
         onCancel={() => setShowConfirmToggle(false)}
       />
 
+      <ConfirmDialog
+        open={showConfirmDelete}
+        title="Excluir Campo"
+        message={`Tem certeza que deseja excluir "${field.name}"? Todas as reservas, fotos e dados serao permanentemente removidos. Esta acao nao pode ser desfeita.`}
+        confirmLabel="Sim, Excluir"
+        danger
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setShowConfirmDelete(false)}
+      />
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link href="/owner/dashboard" className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 border border-border hover:border-primary/40 transition-colors">
@@ -158,7 +182,7 @@ export default function DetalhesCampo() {
         ))}
       </div>
 
-      {/* Toggle Active & Edit */}
+      {/* Toggle Active & Edit & Delete */}
       <div className="flex gap-3">
         <button onClick={handleToggleConfirm}
           className={`flex-1 rounded-xl py-3 text-sm font-medium transition-all duration-300 ${
@@ -168,8 +192,13 @@ export default function DetalhesCampo() {
         </button>
         <Link href={`/owner/editar/${field.id}`}
           className="flex-1 rounded-xl py-3 text-sm font-medium transition-all duration-300 text-center bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20">
-          Editar Campo
+          Editar
         </Link>
+        <button onClick={() => setShowConfirmDelete(true)}
+          className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-300 bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline mr-1" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Excluir
+        </button>
       </div>
 
       {/* Generate Link */}
