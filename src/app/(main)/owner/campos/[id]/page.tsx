@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAsync } from "@/lib/use-async";
@@ -24,6 +24,10 @@ export default function DetalhesCampo() {
   const [toggling, setToggling] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [shake, setShake] = useState(false);
+  const confirmInputRef = useRef<HTMLInputElement>(null);
 
   const fetchField = useCallback(
     async (signal: AbortSignal) => {
@@ -79,6 +83,12 @@ export default function DetalhesCampo() {
 
   async function handleDelete() {
     if (!field) return;
+    if (confirmText !== "EXCLUIR") {
+      setDeleteError('Digite exatamente "EXCLUIR" para confirmar.');
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
     setDeleting(true);
     await fetch(`/api/fields/${field.id}`, { method: "DELETE" });
     setDeleting(false);
@@ -86,6 +96,24 @@ export default function DetalhesCampo() {
     router.push("/owner/dashboard");
     router.refresh();
   }
+
+  function openDeleteModal() {
+    setConfirmText("");
+    setDeleteError("");
+    setShake(false);
+    setShowConfirmDelete(true);
+    setTimeout(() => confirmInputRef.current?.focus(), 100);
+  }
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && showConfirmDelete) {
+        setShowConfirmDelete(false);
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [showConfirmDelete]);
 
   if (loading) {
     return (
@@ -138,16 +166,62 @@ export default function DetalhesCampo() {
         onCancel={() => setShowConfirmToggle(false)}
       />
 
-      <ConfirmDialog
-        open={showConfirmDelete}
-        title="Excluir Campo"
-        message={`Tem certeza que deseja excluir "${field.name}"? Todas as reservas, fotos e dados serao permanentemente removidos. Esta acao nao pode ser desfeita.`}
-        confirmLabel="Sim, Excluir"
-        danger
-        loading={deleting}
-        onConfirm={handleDelete}
-        onCancel={() => setShowConfirmDelete(false)}
-      />
+      {/* Delete Confirmation Modal */}
+      {showConfirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md" onClick={() => setShowConfirmDelete(false)} />
+          <div className={`relative glass rounded-2xl p-6 max-w-sm w-full animate-fade-in-up border border-danger/20 space-y-4 ${shake ? "animate-shake" : ""}`}>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-danger/10">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </div>
+              <div>
+                <h3 id="delete-title" className="text-lg font-bold text-text">Excluir Campo</h3>
+                <p className="text-sm text-text-3">Esta acao nao pode ser desfeita.</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-text-2">Todas as reservas, fotos e dados de <strong>{field.name}</strong> serao permanentemente removidos.</p>
+
+            <div>
+              <label className="text-xs text-text-3 mb-1.5 block" htmlFor="confirm-delete">
+                Digite <strong className="text-danger">EXCLUIR</strong> para confirmar
+              </label>
+              <input
+                ref={confirmInputRef}
+                id="confirm-delete"
+                type="text"
+                value={confirmText}
+                onChange={(e) => { setConfirmText(e.target.value); setDeleteError(""); }}
+                onKeyDown={(e) => { if (e.key === "Enter" && confirmText === "EXCLUIR") handleDelete(); }}
+                className={`input-base text-sm ${deleteError ? "border-danger" : ""}`}
+                placeholder="Digite EXCLUIR"
+                autoComplete="off"
+              />
+              {deleteError && (
+                <p className="text-xs text-danger mt-1.5 animate-fade-in" role="alert">{deleteError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setShowConfirmDelete(false)} disabled={deleting} className="btn-secondary flex-1">
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting || confirmText !== "EXCLUIR"}
+                className={`flex-1 rounded-xl py-3 text-sm font-semibold transition-all duration-300 ${
+                  confirmText === "EXCLUIR"
+                    ? "bg-danger text-white hover:bg-danger/80"
+                    : "bg-surface-2 text-text-3 cursor-not-allowed"
+                }`}
+              >
+                {deleting ? "Excluindo..." : "Excluir Campo"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -194,7 +268,7 @@ export default function DetalhesCampo() {
           className="flex-1 rounded-xl py-3 text-sm font-medium transition-all duration-300 text-center bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20">
           Editar
         </Link>
-        <button onClick={() => setShowConfirmDelete(true)}
+        <button onClick={openDeleteModal}
           className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-300 bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="inline mr-1" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           Excluir
