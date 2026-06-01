@@ -312,3 +312,31 @@ model Favorite {
   @@unique([userId, fieldId])
   @@index([fieldId])
 }
+
+// ──────────── LEDGER FINANCEIRO ────────────
+
+enum LedgerEntryType {
+  PLATFORM_FEE
+  OWNER_PAYOUT
+  REFUND_PLATFORM
+  REFUND_OWNER
+  CREDIT_USER
+}
+
+model TransactionLedger {
+  id          String          @id @default(cuid())
+  bookingId   String
+  userId      String?
+  fieldId     String?
+
+  type        LedgerEntryType
+  amount      Float
+  description String
+
+  createdAt   DateTime        @default(now())
+
+  @@index([bookingId])
+  @@index([fieldId])
+  @@index([createdAt])
+  @@index([type])
+}

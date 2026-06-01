@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { recordLedgerOnConfirm } from "./ledger";
 
 export async function verificarRegra50(bookingId: string) {
   const booking = await prisma.booking.findUnique({
@@ -15,10 +16,12 @@ export async function verificarRegra50(bookingId: string) {
   const minRequired = totalValue * 0.5;
 
   if (paidValue >= minRequired) {
-    return prisma.booking.update({
+    const updated = await prisma.booking.update({
       where: { id: bookingId },
       data: { status: "CONFIRMED" },
     });
+    await recordLedgerOnConfirm(bookingId);
+    return updated;
   }
 
   return prisma.$transaction(async (tx) => {

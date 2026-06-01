@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buscarPagamento } from "@/lib/mercadopago";
+import { recordLedgerOnConfirm } from "@/lib/ledger";
 import crypto from "crypto";
 
 function verifyMPSignature(request: Request, rawBody: string): boolean {
@@ -55,30 +56,33 @@ export async function POST(request: Request) {
       });
 
       if (contribution && !contribution.paid) {
+        const currentBooking = await prisma.booking.findUnique({
+          where: { id: contribution.bookingId },
+          select: { paidValue: true, totalValue: true },
+        });
+        if (!currentBooking) return NextResponse.json({ received: true });
+
+        const nPaidValue = Number(currentBooking.paidValue) + Number(contribution.amount);
+        const tValue = Number(currentBooking.totalValue);
+
         await prisma.$transaction(async (tx) => {
           await tx.paymentContribution.update({
             where: { id: contribution.id },
             data: { paid: true, paidAt: new Date() },
           });
 
-          const booking = await tx.booking.findUnique({
-            where: { id: contribution.bookingId },
-            select: { paidValue: true, totalValue: true },
-          });
-          if (!booking) return;
-
-          const newPaidValue = Number(booking.paidValue) + Number(contribution.amount);
-          const totalValue = Number(booking.totalValue);
-
           await tx.booking.update({
             where: { id: contribution.bookingId },
             data: {
-              paidValue: newPaidValue,
+              paidValue: nPaidValue,
               paidAt: new Date(),
-              status: newPaidValue >= totalValue ? "CONFIRMED" : "PENDING",
+              status: nPaidValue >= tValue ? "CONFIRMED" : "PENDING",
             },
           });
         });
+        if (nPaidValue >= tValue) {
+          await recordLedgerOnConfirm(contribution.bookingId);
+        }
       }
     }
 
