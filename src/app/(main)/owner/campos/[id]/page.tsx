@@ -84,13 +84,20 @@ export default function DetalhesCampo() {
   async function handleDelete() {
     if (!field) return;
     if (confirmText !== "EXCLUIR") {
-      setDeleteError('Digite exatamente "EXCLUIR" para confirmar.');
+      setDeleteError('Digite "EXCLUIR" exatamente para confirmar.');
       setShake(true);
+      try { navigator.vibrate?.(120); } catch {}
       setTimeout(() => setShake(false), 500);
       return;
     }
     setDeleting(true);
-    await fetch(`/api/fields/${field.id}`, { method: "DELETE" });
+    try {
+      await fetch(`/api/fields/${field.id}`, { method: "DELETE" });
+    } catch {
+      setDeleting(false);
+      setDeleteError("Erro ao excluir. Tente novamente.");
+      return;
+    }
     setDeleting(false);
     setShowConfirmDelete(false);
     router.push("/owner/dashboard");
@@ -168,9 +175,9 @@ export default function DetalhesCampo() {
 
       {/* Delete Confirmation Modal */}
       {showConfirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md" onClick={() => setShowConfirmDelete(false)} />
-          <div className={`relative glass rounded-2xl p-6 max-w-sm w-full animate-fade-in-up border border-danger/20 space-y-4 ${shake ? "animate-shake" : ""}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby={deleteError ? "delete-error" : "delete-desc"}>
+          <div className="fixed inset-0 bg-black/85 backdrop-blur-sm" onClick={() => setShowConfirmDelete(false)} aria-label="Fechar modal" />
+          <div className={`relative bg-surface border border-danger/20 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fade-in-up space-y-4 ${shake ? "animate-shake" : ""}`}>
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-danger/10">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -181,10 +188,10 @@ export default function DetalhesCampo() {
               </div>
             </div>
 
-            <p className="text-sm text-text-2">Todas as reservas, fotos e dados de <strong>{field.name}</strong> serao permanentemente removidos.</p>
+            <p id="delete-desc" className="text-sm text-text-2">Todas as reservas, fotos e dados de <strong className="text-text">{field.name}</strong> serao permanentemente removidos.</p>
 
             <div>
-              <label className="text-xs text-text-3 mb-1.5 block" htmlFor="confirm-delete">
+              <label className="text-xs font-medium text-text-2 mb-1.5 block" htmlFor="confirm-delete">
                 Digite <strong className="text-danger">EXCLUIR</strong> para confirmar
               </label>
               <input
@@ -194,12 +201,27 @@ export default function DetalhesCampo() {
                 value={confirmText}
                 onChange={(e) => { setConfirmText(e.target.value); setDeleteError(""); }}
                 onKeyDown={(e) => { if (e.key === "Enter" && confirmText === "EXCLUIR") handleDelete(); }}
-                className={`input-base text-sm ${deleteError ? "border-danger" : ""}`}
-                placeholder="Digite EXCLUIR"
+                className={`input-base text-sm font-mono tracking-wider transition-colors ${
+                  confirmText === "EXCLUIR" ? "border-primary ring-2 ring-primary/20" : deleteError ? "border-danger ring-2 ring-danger/20" : ""
+                }`}
+                placeholder="EXCLUIR"
                 autoComplete="off"
+                spellCheck={false}
+                aria-invalid={!!deleteError}
+                aria-describedby={deleteError ? "delete-error" : undefined}
               />
+              <p className="text-xs text-text-3 mt-1.5">
+                {confirmText.length > 0 && confirmText !== "EXCLUIR"
+                  ? `${confirmText.length}/7 digitado — precisa ser exatamente "EXCLUIR"`
+                  : confirmText === "EXCLUIR"
+                  ? "Pronto! Clique em Excluir Campo para confirmar."
+                  : "Digite a palavra acima em letras maiusculas"}
+              </p>
               {deleteError && (
-                <p className="text-xs text-danger mt-1.5 animate-fade-in" role="alert">{deleteError}</p>
+                <p id="delete-error" className="text-xs text-danger mt-1.5 animate-fade-in flex items-center gap-1" role="alert">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                  {deleteError}
+                </p>
               )}
             </div>
 
@@ -212,11 +234,16 @@ export default function DetalhesCampo() {
                 disabled={deleting || confirmText !== "EXCLUIR"}
                 className={`flex-1 rounded-xl py-3 text-sm font-semibold transition-all duration-300 ${
                   confirmText === "EXCLUIR"
-                    ? "bg-danger text-white hover:bg-danger/80"
+                    ? "bg-danger text-white hover:bg-danger/80 active:scale-95 shadow-lg shadow-danger/20"
                     : "bg-surface-2 text-text-3 cursor-not-allowed"
                 }`}
               >
-                {deleting ? "Excluindo..." : "Excluir Campo"}
+                {deleting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    Excluindo...
+                  </span>
+                ) : "Excluir Campo"}
               </button>
             </div>
           </div>
