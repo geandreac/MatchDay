@@ -9,7 +9,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface FieldData {
   id: string; name: string; address: string; city: string; state?: string;
-  description?: string; capacity: number; pricePerHour: number;
+  description?: string; capacity: number; gameFormat?: string | null; pricePerHour: number;
   startHour: number; endHour: number; active: boolean;
   bookings: { id: string; date: string; status: string; totalValue: number; paidValue: number; }[];
 }
@@ -147,7 +147,7 @@ export default function DetalhesCampo() {
         {[
           { label: "Preco", value: `R$ ${field.pricePerHour}/h`, icon: DollarIcon, color: "text-primary" },
           { label: "Horario", value: `${field.startHour}h as ${field.endHour}h`, icon: ClockIcon2, color: "text-accent" },
-          { label: "Capacidade", value: `${field.capacity} jogadores`, icon: UsersIcon2, color: "text-secondary" },
+          { label: "Jogo Ideal", value: field.gameFormat ?? `${field.capacity} jogadores`, icon: UsersIcon2, color: "text-secondary" },
           { label: "Endereco", value: field.address, icon: MapPinIcon, color: "text-primary" },
         ].map((info) => (
           <div key={info.label} className="card p-3.5">

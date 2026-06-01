@@ -9,7 +9,7 @@ export default function EditarCampo() {
   const router = useRouter();
   const [form, setForm] = useState({
     name: "", cep: "", address: "", city: "", state: "", description: "",
-    capacity: "10", pricePerHour: "", startHour: "17", endHour: "23",
+    gameFormat: "7x7", pricePerHour: "", startHour: "17", endHour: "23",
   });
   const [fieldId, setFieldId] = useState<string>("");
   const [error, setError] = useState("");
@@ -26,7 +26,7 @@ export default function EditarCampo() {
         setForm({
           name: f.name, cep: f.cep || "", address: f.address, city: f.city,
           state: f.state || "", description: f.description || "",
-          capacity: String(f.capacity), pricePerHour: String(f.pricePerHour),
+          gameFormat: f.gameFormat || "7x7", pricePerHour: String(f.pricePerHour),
           startHour: String(f.startHour), endHour: String(f.endHour),
         });
       }
@@ -102,8 +102,12 @@ export default function EditarCampo() {
             <input name="pricePerHour" type="number" step="0.01" value={form.pricePerHour} onChange={handleChange} className="input-base" required />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium text-text-2">Capacidade</label>
-            <input name="capacity" type="number" value={form.capacity} onChange={handleChange} className="input-base" />
+            <label className="text-sm font-medium text-text-2">Jogo Ideal</label>
+            <select name="gameFormat" value={form.gameFormat} onChange={handleChange} className="input-base">
+              {["4x4", "5x5", "6x6", "7x7", "8x8", "9x9", "10x10", "11x11"].map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">

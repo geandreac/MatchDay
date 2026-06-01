@@ -49,6 +49,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         longitude: body.longitude !== undefined ? parseFloat(body.longitude) : field.longitude,
         description: body.description ?? field.description,
         capacity: body.capacity ? parseInt(body.capacity) : field.capacity,
+        gameFormat: body.gameFormat ?? field.gameFormat,
         pricePerHour: body.pricePerHour ? parseFloat(body.pricePerHour) : field.pricePerHour,
         startHour: body.startHour !== undefined ? parseInt(body.startHour) : field.startHour,
         endHour: body.endHour !== undefined ? parseInt(body.endHour) : field.endHour,

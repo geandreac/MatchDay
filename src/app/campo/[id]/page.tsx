@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 
 interface CampoData {
   id: string; name: string; address: string; city: string; state: string | null;
-  description: string | null; capacity: number; pricePerHour: number;
+  description: string | null; capacity: number; gameFormat: string | null; pricePerHour: number;
   startHour: number; endHour: number; photos: string[];
   avgRating: number | null; totalRatings: number;
   availableDays: number[]; latitude?: number; longitude?: number;

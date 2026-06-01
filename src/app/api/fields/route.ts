@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const {
       cep, name, address, city, state,
       latitude, longitude,
-      description, capacity, pricePerHour,
+      description, capacity, gameFormat, pricePerHour,
       startHour, endHour,
     } = body;
 
@@ -48,6 +48,7 @@ export async function POST(request: Request) {
         longitude: longitude ? parseFloat(longitude) : null,
         description: description ?? null,
         capacity: capacity ? parseInt(capacity) : 10,
+        gameFormat: gameFormat ?? null,
         pricePerHour: parseFloat(pricePerHour),
         startHour: parseInt(startHour),
         endHour: parseInt(endHour),

@@ -9,7 +9,7 @@ export default function CadastroCampo() {
   const router = useRouter();
   const [form, setForm] = useState({
     cep: "", name: "", address: "", city: "", state: "", description: "",
-    capacity: "10", pricePerHour: "", startHour: "17", endHour: "23",
+    gameFormat: "7x7", pricePerHour: "", startHour: "17", endHour: "23",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -135,8 +135,12 @@ export default function CadastroCampo() {
             <input name="pricePerHour" type="number" step="0.01" min="0" value={form.pricePerHour} onChange={handleChange} className="input-base" placeholder="150" required />
           </div>
           <div className="space-y-1">
-            <label className="text-sm font-medium text-text-2">Capacidade</label>
-            <input name="capacity" type="number" min="1" value={form.capacity} onChange={handleChange} className="input-base" />
+            <label className="text-sm font-medium text-text-2">Jogo Ideal</label>
+            <select name="gameFormat" value={form.gameFormat} onChange={handleChange} className="input-base">
+              {["4x4", "5x5", "6x6", "7x7", "8x8", "9x9", "10x10", "11x11"].map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
           </div>
         </div>
 
