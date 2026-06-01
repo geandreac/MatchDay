@@ -175,9 +175,8 @@ export default function DetalhesCampo() {
 
       {/* Delete Confirmation Modal */}
       {showConfirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby={deleteError ? "delete-error" : "delete-desc"}>
-          <div className="fixed inset-0 bg-black/85 backdrop-blur-sm" onClick={() => setShowConfirmDelete(false)} aria-label="Fechar modal" />
-          <div className={`relative bg-surface border border-danger/20 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fade-in-up space-y-4 ${shake ? "animate-shake" : ""}`}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby={deleteError ? "delete-error" : "delete-desc"}>
+          <div className={`relative bg-surface border border-danger/20 rounded-t-2xl sm:rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fade-in-up space-y-4 ${shake ? "animate-shake" : ""}`}>
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-danger/10">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
