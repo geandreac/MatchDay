@@ -126,3 +126,15 @@ src/
 ## 📄 Licença
 
 MIT
+
+## Como clonar
+
+```bash
+git clone https://github.com/geandreac/MatchDay.git
+cd MatchDay
+npm install
+# configure o .env (Postgres, Supabase, Mercado Pago, Upstash)
+npx prisma migrate dev   # cria o banco
+npm run seed             # (opcional) dados de exemplo
+npm run dev              # http://localhost:3000
+```
